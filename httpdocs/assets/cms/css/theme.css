@@ -1,0 +1,56 @@
+
+/* Theme Styles */
+
+input {
+	outline: none;
+	margin:2px;
+}
+
+input.text {
+	border: 1px solid #dadada;
+	color:#1c1c1c;
+	padding:7px 5px;
+	font-family: inherit;
+
+	-webkit-border-radius: 4px;
+	   -moz-border-radius: 4px;
+			border-radius: 4px;
+
+}
+
+button, input.submit {
+	border: 1px solid #696;
+	color:#FFF;
+	padding:7px 5px;
+	text-align: center; 
+	text-transform: lowercase;
+	font-family: inherit;
+	font-size: inherit;
+	cursor: pointer;
+
+	-webkit-border-radius: 4px;
+	   -moz-border-radius: 4px;
+			border-radius: 4px;
+
+	background: #0e9a18;
+	background: -webkit-gradient(linear, 0 0, 0 bottom, from(#0e9a18), to(#3fca49));
+	background: -webkit-linear-gradient(#0e9a18, #3fca49);
+	background: -moz-linear-gradient(#0e9a18, #3fca49);
+	background: -ms-linear-gradient(#0e9a18, #3fca49);
+	background: -o-linear-gradient(#0e9a18, #3fca49);
+	background: linear-gradient(#0e9a18, #3fca49);
+	-pie-background: linear-gradient(#0e9a18, #3fca49);
+}
+
+button.small, input.small, select.small {
+	width:80px;
+}
+
+button.medium, input.medium, select.medium {
+	width:160px;
+}
+
+form dl, form dl dt, form dl dd {
+	margin:0;
+	padding:0;
+}
