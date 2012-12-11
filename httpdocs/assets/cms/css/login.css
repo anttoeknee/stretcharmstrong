@@ -1,0 +1,8 @@
+
+/* Login Page */
+form#frm-login {
+	position: relative;
+	display:block;
+	margin:0 auto;
+	width:176px;
+}

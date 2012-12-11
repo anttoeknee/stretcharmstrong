@@ -24,7 +24,7 @@
 
   <!-- CSS: implied media=all -->
   <!-- CSS concatenated and minified via ant build script-->
-  <link rel="stylesheet" href="assets/css/style.css">
+  <link rel="stylesheet" href="/assets/css/style.css">
   <!-- end CSS-->
 
   <!-- More ideas for your <head> here: h5bp.com/d/head-Tips -->
@@ -32,14 +32,14 @@
   <!-- All JavaScript at the bottom, except for Modernizr / Respond.
        Modernizr enables HTML5 elements & feature detects; Respond is a polyfill for min/max-width CSS3 Media Queries
        For optimal performance, use a custom Modernizr build: www.modernizr.com/download/ -->
-  <script src="assets/js/libs/modernizr-2.0.6.min.js"></script>
+  <script src="/assets/js/libs/modernizr-2.0.6.min.js"></script>
 </head>
 
 <body id="<?= $title ?>-page">
 
   <div id="container">
     <header>
-    	<h1>This is the <?= $title ?> page</h1>
+    	<h1>stretcharmstrong: v1.0.0, Anthony Armstrong</h1>
     </header>
     <div id="main" role="main">
        <?= $content; ?>
@@ -58,8 +58,9 @@
 
 
   <!-- scripts concatenated and minified via ant build script-->
-  <script defer src="assets/js/plugins.js"></script>
-  <script defer src="assets/js/script.js"></script>
+  <script defer src="/assets/js/plugins.js"></script>
+  <script defer src="/assets/js/libs/stretcharmstrong-1.0.0.js"></script>
+  <script defer src="/assets/js/script.js"></script>
   <!-- end scripts-->
 
 	

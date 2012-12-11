@@ -211,7 +211,30 @@ td { vertical-align: top; }
    Author: 
    ========================================================================== */
 
+h1 {
+  padding:10px;
+  background: rgba(255, 255, 255, 0.5);
+  color:#000000;
+}
 
+a, a:hover, a:visited, a:active {
+  position: absolute;
+  top:50%;
+  padding:10px;
+  background: rgba(255, 255, 255, 0.5);
+  color:#000000;
+  text-decoration: none;
+  font-size: 18px;
+  font-weight: bold;
+}
+
+a.prev {
+  left:0px;
+}
+
+a.next {
+  right:0px;
+}
 
 
 
