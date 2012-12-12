@@ -58,11 +58,16 @@
 			});
 
 			// give some basic styling to images (so they dont show as soon as they load)
-			members.wrapper.children('img').css({
-				'position' : 'absolute',
-				'display'  : 'none',
-				'top'      : '0px',
-				'left'     : '0px'
+			var images = members.wrapper.children('img');
+			images = images.toArray().reverse();
+			$(images).each(function(i) {
+				$(this).css({
+					'position' : 'absolute',
+					'display'  : 'none',
+					'top'      : '0px',
+					'left'     : '0px',
+					'z-index'  : i
+				});
 			});
 
 			// wait for window load event
@@ -94,16 +99,14 @@
 					// fade in all images
 					public_methods.show_image(0, false);
 
-					// set images to display inline
+					// set images to display block
 					members.wrapper.children('img').css({
-						'position' : 'relative',
-						'display'  : 'inline',
-						'float'    : 'left'
+						'display'  : 'block'
 					});
 
-				}
+					// get next image and place it
 
-				
+				}
 
 				if (callback != null) {
 					callback.call();
@@ -164,17 +167,37 @@
 			var images = members.wrapper.children('img');
 			var image_width = images.width();
 
-			// animate left
-			members.wrapper.animate({
-				'left' : -image_width + 'px'
-			}, 500, function() {
+			// get next image and place it right of the current
+			var current_image = $(images[members.current_image]);
+			var next_image = $(images[members.current_image + 1]);
 
-				// append first image to the end
-				images.first().appendTo(members.wrapper);
+			console.log(members.current_image);
 
-				// reset left
-				members.wrapper.css({
-					'left' : image_width + 'px'
+			next_image.css({
+				'left' : image_width + 'px'
+			});
+
+			// animate
+			current_image.animate({
+				'left' : '-=' + image_width + 'px'
+			}, members.settings.duration);
+
+			next_image.animate({
+				'left' : '-=' + image_width + 'px'
+			}, members.settings.duration, function() {
+
+				// append current image to the end
+				current_image.appendTo(members.wrapper);
+
+				// increment z-index of next image
+				next_image.css({
+					'z-index' : '+=1'
+				});
+
+				// set z-index to length of array for current image
+				var new_z_index = images.length - 1;
+				current_image.css({
+					'z-index' : new_z_index
 				});
 
 			});
@@ -184,12 +207,42 @@
 
 		slide_right : function() {
 
+			// get current width of images
+			var images = members.wrapper.children('img');
+			var image_width = images.width();
 
-		},
+			// get next image and place it right of the current
+			var current_image = $(images[members.current_image]);
+			var prev_image = $(images[images.length - 1]);
 
-		fade_image : function() {
+			// prepend current image to the beginning
+		    prev_image.prependTo(members.wrapper);
+			
+			prev_image.css({
+				'left' : -image_width + 'px'
+			});
 
+			// animate
+			current_image.animate({
+				'left' : '+=' + image_width + 'px'
+			}, members.settings.duration);
 
+			prev_image.animate({
+				'left' : '+=' + image_width + 'px'
+			}, members.settings.duration, function() {
+
+				// increment z-index of next image
+				prev_image.css({
+					'z-index' : '+=1'
+				});
+
+				// set z-index to length of array for current image
+				var new_z_index = 1;
+				current_image.css({
+					'z-index' : new_z_index
+				});
+
+			});
 
 		}
 
@@ -204,6 +257,7 @@
 		    	'rotate'     : false,
 		    	'interval'   : 1000,
 		    	'transition' : 'fade',
+		    	'duration'   : 1000,
 		    	'offset'     : {
 		    		'x' : 0,
 		    		'y' : 0
@@ -306,7 +360,6 @@
 				private_methods.slide_right();
 			} 
 
-			
 			// start interval again if applicable
 			private_methods.rotate_images();
 			
@@ -318,7 +371,7 @@
 			var images = members.wrapper.children('img');
 
 			// fade in selected image
-			$(images[image_index]).fadeIn(700, function() {
+			$(images[image_index]).fadeIn(members.settings.duration + 200, function() {
 
 				if (fade_others === true) {
 
@@ -331,7 +384,7 @@
 						}
 
 						// fade out this image
-						$(images[i]).fadeOut(500);
+						$(images[i]).fadeOut(members.settings.duration);
 
 					});
 

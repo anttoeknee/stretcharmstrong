@@ -9,6 +9,7 @@ $(document).ready(function() {
 	images.stretcharmstrong({
 		'rotate'     : true,
 		'interval'   : 5000,
+		'duration'   : 2000,
 		'transition' : 'fade'
 	});
 
