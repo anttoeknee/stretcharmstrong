@@ -155,38 +155,42 @@
 			var current_image = $(images[members.current_image]);
 			var next_image = $(images[members.current_image + 1]);
 
-			console.log(members.current_image);
+			if (!current_image.is(':animated') && !next_image.is(':animated')) {
 
-			next_image.css({
-				'left' : image_width + 'px',
-				'display' : 'block'
-			});
+				console.log(members.current_image);
 
-			// animate
-			current_image.stop(false, true).animate({
-				'left' : '-=' + image_width + 'px'
-			}, members.settings.duration);
-
-			next_image.stop(false, true).animate({
-				'left' : '-=' + image_width + 'px'
-			}, members.settings.duration, function() {
-
-				// append current image to the end
-				current_image.appendTo(members.wrapper);
-
-				// increment z-index of next image
 				next_image.css({
-					'z-index' : '+=1'
+					'left' : image_width + 'px',
+					'display' : 'block'
 				});
 
-				// set z-index to length of array for current image and reset left
-				var new_z_index = images.length - 1;
-				current_image.css({
-					'z-index' : new_z_index,
-					'left' : -99999
+				// animate
+				current_image.stop(false, true).animate({
+					'left' : '-=' + image_width + 'px'
+				}, members.settings.duration);
+
+				next_image.stop(false, true).animate({
+					'left' : '-=' + image_width + 'px'
+				}, members.settings.duration, function() {
+
+					// append current image to the end
+					current_image.appendTo(members.wrapper);
+
+					// increment z-index of next image
+					next_image.css({
+						'z-index' : '+=1'
+					});
+
+					// set z-index to length of array for current image and reset left
+					var new_z_index = images.length - 1;
+					current_image.css({
+						'z-index' : new_z_index,
+						'left' : -99999
+					});
+
 				});
 
-			});
+			}
 
 
 		},
@@ -201,36 +205,40 @@
 			var current_image = $(images[members.current_image]);
 			var prev_image = $(images[images.length - 1]);
 
-			// prepend current image to the beginning
-		    prev_image.prependTo(members.wrapper);
-			
-			prev_image.css({
-				'left' : -image_width + 'px',
-				'display' : 'block'
-			});
+			if (!current_image.is(':animated') && !prev_image.is(':animated')) {
 
-			// animate
-			current_image.stop(false, true).animate({
-				'left' : '+=' + image_width + 'px'
-			}, members.settings.duration);
-
-			prev_image.stop(false, true).animate({
-				'left' : '+=' + image_width + 'px'
-			}, members.settings.duration, function() {
-
-				// increment z-index of next image
+				// prepend current image to the beginning
+			    prev_image.prependTo(members.wrapper);
+				
 				prev_image.css({
-					'z-index' : '+=1'
+					'left' : -image_width + 'px',
+					'display' : 'block'
 				});
 
-				// set z-index to length of array for current image and reset left
-				var new_z_index = 1;
-				current_image.css({
-					'z-index' : new_z_index,
-					'left' : -99999
+				// animate
+				current_image.stop(false, true).animate({
+					'left' : '+=' + image_width + 'px'
+				}, members.settings.duration);
+
+				prev_image.stop(false, true).animate({
+					'left' : '+=' + image_width + 'px'
+				}, members.settings.duration, function() {
+
+					// increment z-index of next image
+					prev_image.css({
+						'z-index' : '+=1'
+					});
+
+					// set z-index to length of array for current image and reset left
+					var new_z_index = 1;
+					current_image.css({
+						'z-index' : new_z_index,
+						'left' : -99999
+					});
+
 				});
 
-			});
+			}
 
 		}
 

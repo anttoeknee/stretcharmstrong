@@ -14,7 +14,7 @@ $(document).ready(function() {
     	'rotate'     : true,
     	'interval'   : 5000,
     	'duration'   : 1000,
-    	'transition' : 'slide',
+    	'transition' : 'fade',
     	'element'    : 'img',
     	'background' : true          
   	});
