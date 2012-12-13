@@ -2,9 +2,13 @@
 	Anthony Armstrong
 */
 
+// make sure you use document.ready and not window.load
 $(document).ready(function() {
 
-	// slider init
+	/* 
+		see home.php for 'div.backgrounds', the selector for the plugin
+		should always be the parent wrapper of the images/content
+	 */
   	var slides = $('div.backgrounds');
   	slides.stretcharmstrong({
     	'rotate'     : true,
@@ -15,31 +19,27 @@ $(document).ready(function() {
     	'background' : true          
   	});
 
-	// bind next and prev buttons
+	/* 
+		see home.php for markup, these controls will show the next and
+		previous images/content, currently this only works if the 
+		transition type is 'fade'
+	*/
 	$('a').bind('click', function(e) {
 
 		e.preventDefault();
 
 		if ($(this).hasClass('next')) {
 
-			// call forward function
+			// call 'next' function
 			slides.stretcharmstrong('next');
 
 		} else {
 
+			// call 'prev' function
 			slides.stretcharmstrong('prev');
 		}
 
 	});
-
-	// ignore this for now...
-	/*$(this).bgstretch({
-		images : [
-			'/assets/img/image1.jpg',
-			'/assets/img/image2.jpg'
-		]
-	});*/
-
 
 });
 
