@@ -74,7 +74,7 @@
 			});
 
 			// wait for window load event
-			$(window).load(function() {
+			$(window).bind('load.stretcharmstrong', function() {
 
 				// for each img...
 				members.wrapper.children(members.settings.element).each(function(i) {
@@ -143,7 +143,6 @@
 					}
 				]);
 			}
-			
 		},
 
 		slide_left : function() {
@@ -164,18 +163,16 @@
 			});
 
 			// animate
-			current_image.animate({
+			current_image.stop(false, true).animate({
 				'left' : '-=' + image_width + 'px'
 			}, members.settings.duration);
 
-			next_image.animate({
+			next_image.stop(false, true).animate({
 				'left' : '-=' + image_width + 'px'
 			}, members.settings.duration, function() {
 
 				// append current image to the end
 				current_image.appendTo(members.wrapper);
-
-
 
 				// increment z-index of next image
 				next_image.css({
@@ -213,11 +210,11 @@
 			});
 
 			// animate
-			current_image.animate({
+			current_image.stop(false, true).animate({
 				'left' : '+=' + image_width + 'px'
 			}, members.settings.duration);
 
-			prev_image.animate({
+			prev_image.stop(false, true).animate({
 				'left' : '+=' + image_width + 'px'
 			}, members.settings.duration, function() {
 
@@ -277,7 +274,7 @@
 		    	}
 
 		    	// bind resize event to window
-		    	$(window).bind('resize.bgstretch', function() {
+		    	$(window).bind('resize.stretcharmstrong', function() {
 		    		private_methods.resize_images();
 		    	});
 
@@ -364,7 +361,7 @@
 			var images = members.wrapper.children(members.settings.element);
 
 			// fade in selected image
-			$(images[image_index]).fadeIn(members.settings.duration - 200);
+			$(images[image_index]).stop(false, true).fadeIn(members.settings.duration - 200);
 
 			// fade out all other images
 			images.each(function(i) {
@@ -375,7 +372,7 @@
 				}
 
 				// fade out this image
-				$(images[i]).fadeOut(members.settings.duration);
+				$(images[i]).stop(false, true).fadeOut(members.settings.duration);
 
 			});
 
