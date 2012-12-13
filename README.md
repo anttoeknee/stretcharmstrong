@@ -20,6 +20,9 @@ Usage;-
 
 Please see home.php for the markup and script.js in this repo for a basic example of implementation.
 
+All files contained within this repository are subject to the GNU GPL v3, please follow this link for a description:-
+http://opensource.org/licenses/gpl-3.0
+
 
   
 
