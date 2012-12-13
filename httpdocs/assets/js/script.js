@@ -4,14 +4,16 @@
 
 $(document).ready(function() {
 
-	// init bgstretch
-	var images = $('div.backgrounds');
-	images.stretcharmstrong({
-		'rotate'     : true,
-		'interval'   : 5000,
-		'duration'   : 2000,
-		'transition' : 'fade'
-	});
+	// slider init
+  	var slides = $('div.backgrounds');
+  	slides.stretcharmstrong({
+    	'rotate'     : true,
+    	'interval'   : 5000,
+    	'duration'   : 1000,
+    	'transition' : 'slide',
+    	'element'    : 'img',
+    	'background' : true          
+  	});
 
 	// bind next and prev buttons
 	$('a').bind('click', function(e) {
@@ -21,16 +23,16 @@ $(document).ready(function() {
 		if ($(this).hasClass('next')) {
 
 			// call forward function
-			images.stretcharmstrong('next');
+			slides.stretcharmstrong('next');
 
 		} else {
 
-			images.stretcharmstrong('prev');
+			slides.stretcharmstrong('prev');
 		}
 
 	});
 
-
+	// ignore this for now...
 	/*$(this).bgstretch({
 		images : [
 			'/assets/img/image1.jpg',

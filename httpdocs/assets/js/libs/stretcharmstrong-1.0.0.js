@@ -40,27 +40,30 @@
 
 	var private_methods = {
 
-		prepare_images : function(callback) {
+		prepare_elements : function(callback) {
 
 			// remove img_parent and add to body (so always top left)
-			members.wrapper.prependTo($('body'));
+		 	if (members.settings.background == true) {
+				members.wrapper.prependTo($('body'));
 
-			// set parent styles
-			members.wrapper.css({
-				'position' : 'absolute',
-				'display'  : 'block',
-				'top'      : '0px',
-				'left'     : '0px',
-				'width'    : '100%',
-				'height'   : '100%',
-				'z-index'  : '-1',
-				'overflow' : 'hidden'
-			});
+				// set parent styles
+				members.wrapper.css({
+					'position' : 'absolute',
+					'display'  : 'block',
+					'top'      : '0px',
+					'left'     : '0px',
+					'width'    : '100%',
+					'height'   : '100%',
+					'z-index'  : '-1',
+					'overflow' : 'hidden'
+				});
+
+			}
 
 			// give some basic styling to images (so they dont show as soon as they load)
-			var images = members.wrapper.children('img');
-			images = images.toArray().reverse();
-			$(images).each(function(i) {
+			var elements = members.wrapper.children(members.settings.element);
+			elements = elements.toArray().reverse();
+			$(elements).each(function(i) {
 				$(this).css({
 					'position' : 'absolute',
 					'display'  : 'none',
@@ -74,7 +77,7 @@
 			$(window).load(function() {
 
 				// for each img...
-				members.wrapper.children('img').each(function(i) {
+				members.wrapper.children(members.settings.element).each(function(i) {
 
 					// store original width and height
 					members.image_attr[i] = {
@@ -87,26 +90,8 @@
 
 				});
 
-				if (members.settings.transition == 'fade') {
-
-					// fade in first image
-					public_methods.show_image(0, true);
-
-				}
-
-				if (members.settings.transition == 'slide') {
-
-					// fade in all images
-					public_methods.show_image(0, false);
-
-					// set images to display block
-					members.wrapper.children('img').css({
-						'display'  : 'block'
-					});
-
-					// get next image and place it
-
-				}
+				// fade in first image
+				public_methods.show_image(0);
 
 				if (callback != null) {
 					callback.call();
@@ -118,7 +103,7 @@
 		resize_images : function() {	
 
 			// for each image
-			members.wrapper.children('img').each(function(i) {
+			members.wrapper.children(members.settings.element).each(function(i) {
 
 				/*
 					calculate the new width and height for the image whilst maintaing aspect ratio
@@ -164,7 +149,7 @@
 		slide_left : function() {
 
 			// get current width of images
-			var images = members.wrapper.children('img');
+			var images = members.wrapper.children(members.settings.element);
 			var image_width = images.width();
 
 			// get next image and place it right of the current
@@ -174,7 +159,8 @@
 			console.log(members.current_image);
 
 			next_image.css({
-				'left' : image_width + 'px'
+				'left' : image_width + 'px',
+				'display' : 'block'
 			});
 
 			// animate
@@ -189,15 +175,18 @@
 				// append current image to the end
 				current_image.appendTo(members.wrapper);
 
+
+
 				// increment z-index of next image
 				next_image.css({
 					'z-index' : '+=1'
 				});
 
-				// set z-index to length of array for current image
+				// set z-index to length of array for current image and reset left
 				var new_z_index = images.length - 1;
 				current_image.css({
-					'z-index' : new_z_index
+					'z-index' : new_z_index,
+					'left' : -99999
 				});
 
 			});
@@ -208,7 +197,7 @@
 		slide_right : function() {
 
 			// get current width of images
-			var images = members.wrapper.children('img');
+			var images = members.wrapper.children(members.settings.element);
 			var image_width = images.width();
 
 			// get next image and place it right of the current
@@ -219,7 +208,8 @@
 		    prev_image.prependTo(members.wrapper);
 			
 			prev_image.css({
-				'left' : -image_width + 'px'
+				'left' : -image_width + 'px',
+				'display' : 'block'
 			});
 
 			// animate
@@ -236,10 +226,11 @@
 					'z-index' : '+=1'
 				});
 
-				// set z-index to length of array for current image
+				// set z-index to length of array for current image and reset left
 				var new_z_index = 1;
 				current_image.css({
-					'z-index' : new_z_index
+					'z-index' : new_z_index,
+					'left' : -99999
 				});
 
 			});
@@ -261,7 +252,9 @@
 		    	'offset'     : {
 		    		'x' : 0,
 		    		'y' : 0
-		      	}
+		      	},
+		      	'element'     : 'img',
+		      	'background' : true
 		    }, options);
 
 		    // determine sender
@@ -277,7 +270,7 @@
 
 		    	} else {
 
-		    		private_methods.prepare_images(function() {
+		    		private_methods.prepare_elements(function() {
 		    			private_methods.resize_images();
 		    		});
 
@@ -316,7 +309,7 @@
 			if (members.settings.transition == 'fade') {
 
 				// call show method
-				public_methods.show_image(new_index, true);
+				public_methods.show_image(new_index);
 			} 
 
 			if (members.settings.transition == 'slide') {
@@ -351,7 +344,7 @@
 			if (members.settings.transition == 'fade') {
 
 				// call show method
-				public_methods.show_image(new_index, true);
+				public_methods.show_image(new_index);
 			} 
 
 			if (members.settings.transition == 'slide') {
@@ -365,35 +358,29 @@
 			
 		},
 
-		show_image : function(image_index, fade_others) {
+		show_image : function(image_index) {
 
 			// get handle on images
-			var images = members.wrapper.children('img');
+			var images = members.wrapper.children(members.settings.element);
 
 			// fade in selected image
-			$(images[image_index]).fadeIn(members.settings.duration + 200, function() {
+			$(images[image_index]).fadeIn(members.settings.duration - 200);
 
-				if (fade_others === true) {
+			// fade out all other images
+			images.each(function(i) {
 
-					// fade out all other images
-					images.each(function(i) {
-
-						// if were on the selected image then skip this iteration
-						if (i == image_index) {
-							return true;
-						}
-
-						// fade out this image
-						$(images[i]).fadeOut(members.settings.duration);
-
-					});
-
+				// if were on the selected image then skip this iteration
+				if (i == image_index) {
+					return true;
 				}
 
-				// update current_image
-				members.current_image = image_index;
+				// fade out this image
+				$(images[i]).fadeOut(members.settings.duration);
 
 			});
+
+			// update current_image
+			members.current_image = image_index;
 
 		}
 
