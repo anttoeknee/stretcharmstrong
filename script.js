@@ -21,8 +21,7 @@ $(document).ready(function() {
 
 	/* 
 		see home.php for markup, these controls will show the next and
-		previous images/content, currently this only works if the 
-		transition type is 'fade'
+		previous images/contents
 	*/
 	$('a').bind('click', function(e) {
 

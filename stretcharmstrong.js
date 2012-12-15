@@ -1,7 +1,7 @@
 /*
 	stretcharmstrong: developed by Anthony Armstrong
 		version: 1.0.0
-		last modified: 2012-12-02
+		last modified: 2012-12-15
 */
 
 (function($) {
@@ -254,7 +254,7 @@
 		    	'interval'   : 1000,
 		    	'transition' : 'fade',
 		    	'duration'   : 1000,
-		    	'offset'     : {
+		    	'offset'     : { // TODO: implement functionality for offsets
 		    		'x' : 0,
 		    		'y' : 0
 		      	},
@@ -271,7 +271,7 @@
 		    	// is it the document?
 		    	if (members.wrapper[0].nodeName == '#document') {
 
-		    		console.log('called on document, check for passed arguments');
+		    		// TODO: process array of images
 
 		    	} else {
 
