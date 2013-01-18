@@ -92,6 +92,7 @@
 
 				// fade in first image
 				public_methods.show_image(0);
+				//private_methods.image_indexer(members.current_image + 1);
 
 				if (callback != null) {
 					callback.call();
@@ -145,19 +146,17 @@
 			}
 		},
 
-		slide_left : function() {
+		slide_left : function(new_index) {
 
 			// get current width of images
 			var images = members.wrapper.children(members.settings.element);
 			var image_width = images.width();
 
 			// get next image and place it right of the current
-			var current_image = $(images[members.current_image]);
-			var next_image = $(images[members.current_image + 1]);
+			var current_image = $(images[0]);
+			var next_image = $(images[1]);
 
 			if (!current_image.is(':animated') && !next_image.is(':animated')) {
-
-				console.log(members.current_image);
 
 				next_image.css({
 					'left' : image_width + 'px',
@@ -188,6 +187,17 @@
 						'left' : -99999
 					});
 
+					// call transition complete callback
+					if (members.settings.transition_complete != null) {
+	  					members.settings.transition_complete.call(next_image, {
+	  						'transition' : 'slide',
+	  						'direction' : 'left'
+	  					});
+	  				}
+
+	  				// check what image we're on for cycle complete callback
+					private_methods.image_indexer(new_index, true);
+
 				});
 
 			}
@@ -195,14 +205,14 @@
 
 		},
 
-		slide_right : function() {
+		slide_right : function(new_index) {
 
 			// get current width of images
 			var images = members.wrapper.children(members.settings.element);
 			var image_width = images.width();
 
 			// get next image and place it right of the current
-			var current_image = $(images[members.current_image]);
+			var current_image = $(images[0]);
 			var prev_image = $(images[images.length - 1]);
 
 			if (!current_image.is(':animated') && !prev_image.is(':animated')) {
@@ -236,9 +246,37 @@
 						'left' : -99999
 					});
 
+					// call transition complete callback
+					if (members.settings.transition_complete != null) {
+	  					members.settings.transition_complete.call(prev_image, {
+	  						'transition' : 'slide',
+	  						'direction'  : 'right'
+	  					});
+	  				}
+
+	  				// check what image we're on for cycle complete callback
+					private_methods.image_indexer(new_index);
+
 				});
 
 			}
+
+		},
+
+		image_indexer : function(index, fire) {
+
+			if (fire) {
+				if (members.current_image == members.image_count - 1) {
+					if (members.settings.cycle_complete != null) {
+						members.settings.cycle_complete.call(undefined, {
+							'total_images' : members.image_count,
+							'current_image': members.current_image + 1
+						});
+					}
+				}
+			}
+
+			members.current_image = index;
 
 		}
 
@@ -259,7 +297,9 @@
 		    		'y' : 0
 		      	},
 		      	'element'     : 'img',
-		      	'background' : true
+		      	'background' : true,
+		      	transition_complete : function(event) {},
+		      	cycle_complete : function(event) {}
 		    }, options);
 
 		    // determine sender
@@ -314,17 +354,19 @@
 			if (members.settings.transition == 'fade') {
 
 				// call show method
-				public_methods.show_image(new_index);
+				public_methods.show_image(members.current_image);
 			} 
 
 			if (members.settings.transition == 'slide') {
 
 				// call slide method
-				private_methods.slide_left();
+				private_methods.slide_left(new_index);
 			} 
-			
+
 			// start interval again if applicable
 			private_methods.rotate_images();
+
+			
 
 		},
 
@@ -349,27 +391,48 @@
 			if (members.settings.transition == 'fade') {
 
 				// call show method
-				public_methods.show_image(new_index);
+				public_methods.show_image(members.current_image);
 			} 
 
 			if (members.settings.transition == 'slide') {
 
 				// call slide method
-				private_methods.slide_right();
+				private_methods.slide_right(new_index);
 			} 
 
 			// start interval again if applicable
 			private_methods.rotate_images();
+
+			
 			
 		},
 
 		show_image : function(image_index) {
 
+			//console.log(members.current_image);
+
 			// get handle on images
 			var images = members.wrapper.children(members.settings.element);
 
+			// is the next image outside the range?
+			if (image_index > members.image_count - 1) {
+
+				// reset new_index to 0
+				image_index = 0;
+
+			}
+
 			// fade in selected image
-			$(images[image_index]).stop(false, true).fadeIn(members.settings.duration - 200);
+			$(images[image_index]).stop(false, true).fadeIn(members.settings.duration - 200, function() {
+
+				// call transition complete callback
+				if (members.settings.transition_complete != null) {
+  					members.settings.transition_complete.call($(images[image_index]), {
+  						'transition' : 'fade'
+  					});
+  				}
+
+			});
 
 			// fade out all other images
 			images.each(function(i) {
@@ -384,8 +447,8 @@
 
 			});
 
-			// update current_image
-			members.current_image = image_index;
+			// check what image we're on for cycle complete callback
+			private_methods.image_indexer(image_index + 1, true);
 
 		}
 

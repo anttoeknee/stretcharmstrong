@@ -16,7 +16,14 @@ $(document).ready(function() {
     	'duration'   : 1000,
     	'transition' : 'fade',
     	'element'    : 'img',
-    	'background' : true          
+    	'background' : true,
+    	transition_complete : function(event) {
+    		console.log(this); // the image that has been transitioned in...
+    		console.log(event); // some properties for the transition...
+    	},
+    	cycle_complete : function(event) {
+    		console.log(event); // some properties for the transition...
+    	}       
   	});
 
 	/* 
