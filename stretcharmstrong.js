@@ -143,7 +143,16 @@
 						public_methods.next();
 					}
 				]);
+
+				// call transition complete callback
+				if (members.settings.rotate_changed != null) {
+					members.settings.rotate_changed.call(undefined, {
+						'rotate' : 'play'
+					});
+				}
 			}
+
+			
 		},
 
 		slide_left : function(new_index) {
@@ -299,7 +308,8 @@
 		      	'element'     : 'img',
 		      	'background' : true,
 		      	transition_complete : function(event) {},
-		      	cycle_complete : function(event) {}
+		      	cycle_complete : function(event) {},
+		      	rotate_changed : function(event) {}
 		    }, options);
 
 		    // determine sender
@@ -450,7 +460,22 @@
 			// check what image we're on for cycle complete callback
 			private_methods.image_indexer(image_index + 1, true);
 
+		},
+
+		pause : function() {
+			// stop the interval if there is one
+			if (members.interval !== false) {
+				members.interval.cancel();
+			}
+
+			// call transition complete callback
+			if (members.settings.rotate_changed != null) {
+				members.settings.rotate_changed.call(undefined, {
+					'rotate' : 'paused'
+				});
+			}
 		}
+
 
 	};
 

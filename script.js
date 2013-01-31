@@ -20,9 +20,14 @@ $(document).ready(function() {
     	transition_complete : function(event) {
     		console.log(this); // the image that has been transitioned in...
     		console.log(event); // some properties for the transition...
+    		console.log('transition complete');
     	},
     	cycle_complete : function(event) {
     		console.log(event); // some properties for the transition...
+    		console.log('cycle complete');
+    	},
+    	rotate_changed : function(event) {
+    		console.log(event); // info on the state of rotation
     	}       
   	});
 
@@ -39,10 +44,18 @@ $(document).ready(function() {
 			// call 'next' function
 			slides.stretcharmstrong('next');
 
-		} else {
+		} 
+
+		if ($(this).hasClass('prev')) {
 
 			// call 'prev' function
 			slides.stretcharmstrong('prev');
+		}
+
+		if ($(this).hasClass('pause')) {
+
+			// call 'pause' function
+			slides.stretcharmstrong('pause');
 		}
 
 	});
