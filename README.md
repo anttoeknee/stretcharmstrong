@@ -21,7 +21,7 @@ Features
 Usage
 -----
 
-- You can initialise stretcharmstrong with default settings like so;
+- You can initialize stretcharmstrong with default settings like so;
 
 <pre>
   $('div#wrapping-element').stretcharmstrong();
@@ -31,24 +31,20 @@ Usage
 
 <pre>
   $('div#wrapping-element').stretcharmstrong({
-    // options
     'rotate'     : false,                             
     'interval'   : 5000,                              
     'transition' : 'fade',                            
     'duration'   : 1000,                              
     'element'    : 'img',                             
     'background' : true,                              
-    // callbacks
-    transition_complete : function(event) {
-      console.log(this);                                  
-    },                                                                   
+    transition_complete : function(event) {},                                                                   
     cycle_complete : function() {},
     rotate_changed : function(event) {}    
   });
 </pre>
 
-Explantion of options
----------------------
+Options
+-----------------------
 
   - *rotate*     : rotate images? true or false 
   - *interval*   : the rotate interval in miliseconds 
@@ -57,7 +53,7 @@ Explantion of options
   - *element*    : the element type (semantically) to be worked with  
   - *background* : use as background or inline (true or false) 
  
-Explantion of callbacks
+Callbacks
 -----------------------
  
 **transition_complete** : fires when an element has been transitioned passing event data as follows;- 
@@ -72,11 +68,23 @@ Explantion of callbacks
 **rotate_changed** : fires when the rotation interval has been stopped or started passing event data as follows;- 
   - *rotate* : 'resumed' or 'paused' 
 
+Methods
+-----------------------
+
+There are some basic methods available to control the slides when rotating, the syntax for calling a method is as follows;-
+
+<pre>
+  $('div#wrapping-element').stretcharmstrong('method_name', argument);
+</pre>
+
+The methods available are;-
+  - **next**   : show the next element in the stack
+  - **prev**   : show the previous element in the stack
+  - **jumpto** : show the element whose index is that given as an argument
+  - **pause**  : pause the rotation
+  - **resume** : resume the rotation
+
 Please see home.php for the markup and script.js in this repo for a basic example of implementation.
 
 All files contained within this repository are subject to the GNU GPL v3, please follow this link for a description:-
 http://opensource.org/licenses/gpl-3.0
-
-
-  
-
