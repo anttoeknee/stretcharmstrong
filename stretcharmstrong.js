@@ -1,7 +1,7 @@
 /*
 	stretcharmstrong: developed by Anthony Armstrong
 		version: 1.0.0
-		last modified: 2012-12-15
+		last modified: 2013-02-01
 */
 
 (function($) {
