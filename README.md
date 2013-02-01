@@ -50,12 +50,12 @@ Usage
 Explantion of options
 ---------------------
 
-**rotate**     : rotate images? true or false 
-**interval**   : the rotate interval in miliseconds 
-**transition** : the transition type for the rotate ('fade' or 'slide') 
-**duration**   : the transition duration in miliseconds 
-**element**    : the element type (semantically) to be worked with  
-**background** : use as background or inline (true or false) 
+  - *rotate*     : rotate images? true or false 
+  - *interval*   : the rotate interval in miliseconds 
+  - *transition* : the transition type for the rotate ('fade' or 'slide') 
+  - *duration*   : the transition duration in miliseconds 
+  - *element*    : the element type (semantically) to be worked with  
+  - *background* : use as background or inline (true or false) 
  
 Explantion of callbacks
 -----------------------
