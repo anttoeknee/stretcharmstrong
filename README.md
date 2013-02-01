@@ -3,12 +3,14 @@ stretcharmstrong
 
 jQuery Plugin for HTML Background Resizing and Slide Show
 
-What this plugin does;-
+What this plugin does
+---------------------
 
 - Resizes images whilst maintaining aspect ratio
 - Provides slide show functionality for images/content with 'fx' options e.g. 'slide' or 'fade'
 
-Features;-
+Features
+--------
 
 - Easy implementation
 - Can be used as backgrounds or in the document flow
@@ -21,29 +23,29 @@ Usage
 
 - You can initialise stretcharmstrong with default settings like so;
 
-<code>
-$('div#wrapping-element').stretcharmstrong();
-</code>
+<pre>
+  $('div#wrapping-element').stretcharmstrong();
+</pre>
 
 - Or you can set some options and callbacks like so (these are defaults);
 
-<code>
-$('div#wrapping-element').stretcharmstrong({
-  // options
-  'rotate'     : false,                             
-  'interval'   : 5000,                              
-  'transition' : 'fade',                            
-  'duration'   : 1000,                              
-  'element'    : 'img',                             
-  'background' : true,                              
-  // callbacks
-  transition_complete : function(event) {
-    console.log(this);                                  
-  },                                                                   
-  cycle_complete : function() {},
-  rotate_changed : function(event) {}    
-});
-</code>
+<pre>
+  $('div#wrapping-element').stretcharmstrong({
+    // options
+    'rotate'     : false,                             
+    'interval'   : 5000,                              
+    'transition' : 'fade',                            
+    'duration'   : 1000,                              
+    'element'    : 'img',                             
+    'background' : true,                              
+    // callbacks
+    transition_complete : function(event) {
+      console.log(this);                                  
+    },                                                                   
+    cycle_complete : function() {},
+    rotate_changed : function(event) {}    
+  });
+</pre>
 
 Explantion of options
 ---------------------
