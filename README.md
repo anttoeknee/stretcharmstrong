@@ -20,12 +20,12 @@ Usage;
 
 - Initialise stretcharmstrong with default settings like so;
 
-<pre>
+
   $('div#wrapping-element').stretcharmstrong();
-</pre>
+
 
 - You can set some options and callbacks like so (these are defaults);
-<pre>
+
   $('div#wrapping-element').stretcharmstrong({
     // options
     'rotate'     : false,                             
@@ -41,30 +41,31 @@ Usage;
     cycle_complete : function() {},
     rotate_changed : function(event) {}    
   });
-</pre>
 
-- Explantion of options;- 
+Explantion of options
+---------------------
+
+rotate     : rotate images? true or false 
+interval   : the rotate interval in miliseconds 
+transition : the transition type for the rotate ('fade' or 'slide') 
+duration   : the transition duration in miliseconds 
+element    : the element type (semantically) to be worked with  
+background : use as background or inline (true or false) 
  
-  rotate     : rotate images? true or false 
-  interval   : the rotate interval in miliseconds 
-  transition : the transition type for the rotate ('fade' or 'slide') 
-  duration   : the transition duration in miliseconds 
-  element    : the element type (semantically) to be worked with  
-  background : use as background or inline (true or false) 
+Explantion of callbacks
+-----------------------
  
-- Explantion of callbacks;- 
- 
-  transition_complete : fires when an element has been transitioned passing event data as follows;- 
-    transition - the transition type 
-    direction  - which direction the slide came from (if transition is slide) 
-    index      - the index of the image being transitioned in 
-     
-    'this' is a reference to the image being transitioned in 
-      
-  cycle_complete : fires when all elements have been transitioned  
+transition_complete : fires when an element has been transitioned passing event data as follows;- 
+  - transition : the transition type 
+  - direction  : which direction the slide came from (if transition is slide) 
+  - index      : the index of the image being transitioned in 
    
-  rotate_changed : fires when the rotation interval has been stopped or started passing event data as follows;- 
-    rotate - 'resumed' or 'paused' 
+  - 'this' is a reference to the image being transitioned in 
+    
+cycle_complete : fires when all elements have been transitioned  
+ 
+rotate_changed : fires when the rotation interval has been stopped or started passing event data as follows;- 
+  - rotate : 'resumed' or 'paused' 
 
 Please see home.php for the markup and script.js in this repo for a basic example of implementation.
 
