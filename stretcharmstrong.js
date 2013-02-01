@@ -62,8 +62,8 @@
 
 			// give some basic styling to images (so they dont show as soon as they load)
 			var elements = members.wrapper.children(members.settings.element);
-			elements = elements.toArray().reverse();
-			$(elements).each(function(i) {
+			var reversed_elements = elements.toArray().reverse();
+			$(reversed_elements).each(function(i) {
 				$(this).css({
 					'position' : 'absolute',
 					'display'  : 'none',
@@ -71,6 +71,11 @@
 					'left'     : '0px',
 					'z-index'  : i
 				});
+			});
+
+			// give an id to each element
+			$(elements).each(function(i) {
+				$(this).attr('id', 'stretcharmstrong-' + i);
 			});
 
 			// wait for window load event
@@ -91,9 +96,8 @@
 				});
 
 				// fade in first image
-				public_methods.show_image(0);
-				//private_methods.image_indexer(members.current_image + 1);
-
+				private_methods.show_image(0);
+				
 				if (callback != null) {
 					callback.call();
 				}
@@ -147,7 +151,7 @@
 				// call transition complete callback
 				if (members.settings.rotate_changed != null) {
 					members.settings.rotate_changed.call(undefined, {
-						'rotate' : 'play'
+						'rotate' : 'resumed'
 					});
 				}
 			}
@@ -206,6 +210,9 @@
 
 	  				// check what image we're on for cycle complete callback
 					private_methods.image_indexer(new_index, true);
+
+					// remove evil-clone 
+					$(members.wrapper).find('.evil-clone').remove();
 
 				});
 
@@ -270,6 +277,96 @@
 
 			}
 
+		},
+
+		show_image : function(image_index) {
+
+			//console.log(members.current_image);
+
+			// get handle on images
+			var images = members.wrapper.children(members.settings.element);
+
+			// is the next image outside the range?
+			if (image_index > members.image_count - 1) {
+
+				// reset new_index to 0
+				image_index = 0;
+
+			}
+
+			// fade in selected image
+			$(images[image_index]).stop(false, true).fadeIn(members.settings.duration - 200, function() {
+
+				// call transition complete callback
+				if (members.settings.transition_complete != null) {
+  					members.settings.transition_complete.call($(images[image_index]), {
+  						'transition' : 'fade'
+  					});
+  				}
+
+			});
+
+			// fade out all other images
+			images.each(function(i) {
+
+				// if were on the selected image then skip this iteration
+				if (i == image_index) {
+					return true;
+				}
+
+				// fade out this image
+				$(images[i]).stop(false, true).fadeOut(members.settings.duration);
+
+			});
+
+			// check what image we're on for cycle complete callback
+			private_methods.image_indexer(image_index + 1, true);
+
+		},
+
+		fast_forward : function(image_index) {
+
+			// get desired image
+			var element = $('#stretcharmstrong-' + image_index);
+
+			// get current image and clone it
+			var current_image = members.wrapper.children(members.settings.element)[0];
+			var current_image_clone = $(current_image).clone(false);
+
+			if (!$(current_image).is(':animated')) {
+
+				// determine the z-index of the cloned image and set it and put image in place...
+				var z_index = parseInt($(current_image).css('z-index')) + 1;
+				current_image_clone.addClass('evil-clone');
+				current_image_clone.css({
+					'z-index' : z_index,
+					'left'    : 0
+				});
+
+				// manipulate stack...
+				var previous_elements = element.prevAll(':not(.evil-clone)');
+
+				// reverse previous images
+				var reversed_previous_elements = $(previous_elements.toArray().reverse());
+				reversed_previous_elements.appendTo(members.wrapper);
+
+				// insert cloned image at the beginning of the stack
+				current_image_clone.prependTo(members.wrapper);
+
+				// set 'left' and 'z-index' of previous elements to '-99999' and +1
+				reversed_previous_elements.each(function() {
+					var current_z = parseInt($(this).css('z-index'));
+					var new_z = current_z + 1; 
+					$(this).css({
+						'z-index' : new_z,
+						'left' : -99999
+					});
+				});
+			}
+
+			// everything in place, call slide left...
+			private_methods.slide_left();
+			
 		},
 
 		image_indexer : function(index, fire) {
@@ -364,7 +461,7 @@
 			if (members.settings.transition == 'fade') {
 
 				// call show method
-				public_methods.show_image(members.current_image);
+				private_methods.show_image(members.current_image);
 			} 
 
 			if (members.settings.transition == 'slide') {
@@ -401,7 +498,7 @@
 			if (members.settings.transition == 'fade') {
 
 				// call show method
-				public_methods.show_image(members.current_image);
+				private_methods.show_image(members.current_image);
 			} 
 
 			if (members.settings.transition == 'slide') {
@@ -417,48 +514,23 @@
 			
 		},
 
-		show_image : function(image_index) {
+		jumpto : function(image_index) {
 
-			//console.log(members.current_image);
-
-			// get handle on images
-			var images = members.wrapper.children(members.settings.element);
-
-			// is the next image outside the range?
-			if (image_index > members.image_count - 1) {
-
-				// reset new_index to 0
-				image_index = 0;
-
+			// stop the interval if there is one
+			if (members.interval !== false) {
+				members.interval.cancel();
 			}
 
-			// fade in selected image
-			$(images[image_index]).stop(false, true).fadeIn(members.settings.duration - 200, function() {
+			if (members.settings.transition == 'fade') {
+				private_methods.show_image(image_index);
+			}
 
-				// call transition complete callback
-				if (members.settings.transition_complete != null) {
-  					members.settings.transition_complete.call($(images[image_index]), {
-  						'transition' : 'fade'
-  					});
-  				}
+			if (members.settings.transition == 'slide') {
+				private_methods.fast_forward(image_index);
+			}
 
-			});
-
-			// fade out all other images
-			images.each(function(i) {
-
-				// if were on the selected image then skip this iteration
-				if (i == image_index) {
-					return true;
-				}
-
-				// fade out this image
-				$(images[i]).stop(false, true).fadeOut(members.settings.duration);
-
-			});
-
-			// check what image we're on for cycle complete callback
-			private_methods.image_indexer(image_index + 1, true);
+			// start interval again if applicable
+			private_methods.rotate_images();
 
 		},
 
@@ -474,6 +546,13 @@
 					'rotate' : 'paused'
 				});
 			}
+		},
+
+		resume : function() {
+
+			// start interval again if applicable
+			private_methods.rotate_images();
+
 		}
 
 

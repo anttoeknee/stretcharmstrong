@@ -14,20 +14,31 @@ $(document).ready(function() {
     	'rotate'     : true,
     	'interval'   : 5000,
     	'duration'   : 1000,
-    	'transition' : 'fade',
+    	'transition' : 'slide',
     	'element'    : 'img',
     	'background' : true,
-    	transition_complete : function(event) {
+    	transition_complete : function(event) { // some properties for the transition...
     		console.log(this); // the image that has been transitioned in...
-    		console.log(event); // some properties for the transition...
+    		console.log(event); 
     		console.log('transition complete');
     	},
-    	cycle_complete : function(event) {
-    		console.log(event); // some properties for the transition...
+    	cycle_complete : function(event) {  // some properties for the transition...
+    		console.log(event);
     		console.log('cycle complete');
     	},
-    	rotate_changed : function(event) {
-    		console.log(event); // info on the state of rotation
+    	rotate_changed : function(event) { // info on the state of rotation
+    		//console.log(event);
+    		if (event.rotate == 'resumed') {
+    			$('.timer-ctl').text('pause');
+				$('.timer-ctl').removeClass('resume');
+				$('.timer-ctl').addClass('pause');
+    		}
+
+    		if (event.rotate == 'paused') {
+    			$('.timer-ctl').text('resume');
+				$('.timer-ctl').removeClass('pause');
+				$('.timer-ctl').addClass('resume');
+    		}
     	}       
   	});
 
@@ -35,30 +46,52 @@ $(document).ready(function() {
 		see home.php for markup, these controls will show the next and
 		previous images/contents
 	*/
-	$('a').bind('click', function(e) {
+	$('.next').bind('click', function(e) {
 
 		e.preventDefault();
 
-		if ($(this).hasClass('next')) {
-
-			// call 'next' function
-			slides.stretcharmstrong('next');
-
-		} 
-
-		if ($(this).hasClass('prev')) {
-
-			// call 'prev' function
-			slides.stretcharmstrong('prev');
-		}
-
-		if ($(this).hasClass('pause')) {
-
-			// call 'pause' function
-			slides.stretcharmstrong('pause');
-		}
+		// call 'next' function
+		slides.stretcharmstrong('next');
 
 	});
+
+	$('.prev').bind('click', function(e) {
+
+		e.preventDefault();
+
+		// call 'prev' function
+		slides.stretcharmstrong('prev');
+		
+	});
+
+	$('.pause').live('click', function(e) {
+
+		e.preventDefault();
+
+		// call 'pause' function
+		slides.stretcharmstrong('pause');
+
+	});
+
+	$('.resume').live('click', function(e) {
+
+		e.preventDefault();
+		
+		// call 'resume' function
+		slides.stretcharmstrong('resume');
+
+	});
+
+	slides.find('img').each(function(i) {
+		$('div.slide-chooser').append('<a href="#" title="Show slide '+i+'" id="'+i+'">'+i+'</a>');
+	});
+
+	$('div.slide-chooser a').bind('click', function(e) {
+		e.preventDefault();
+		slides.stretcharmstrong('jumpto', parseInt($(this).attr('id')));
+	});
+
+
 
 });
 
