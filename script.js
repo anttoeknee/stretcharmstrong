@@ -22,12 +22,11 @@ $(document).ready(function() {
     		console.log(event); 
     		console.log('transition complete');
     	},
-    	cycle_complete : function(event) {  // some properties for the transition...
-    		console.log(event);
+    	cycle_complete : function() { 
     		console.log('cycle complete');
     	},
     	rotate_changed : function(event) { // info on the state of rotation
-    		//console.log(event);
+    		console.log(event);
     		if (event.rotate == 'resumed') {
     			$('.timer-ctl').text('pause');
 				$('.timer-ctl').removeClass('resume');

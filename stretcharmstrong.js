@@ -204,7 +204,8 @@
 					if (members.settings.transition_complete != null) {
 	  					members.settings.transition_complete.call(next_image, {
 	  						'transition' : 'slide',
-	  						'direction' : 'left'
+	  						'direction'  : 'left',
+	  						'index'      : next_image.data('image').split('-')[1]
 	  					});
 	  				}
 
@@ -266,7 +267,8 @@
 					if (members.settings.transition_complete != null) {
 	  					members.settings.transition_complete.call(prev_image, {
 	  						'transition' : 'slide',
-	  						'direction'  : 'right'
+	  						'direction'  : 'right',
+	  						'index'      : prev_image.data('image').split('-')[1]
 	  					});
 	  				}
 
@@ -300,7 +302,8 @@
 				// call transition complete callback
 				if (members.settings.transition_complete != null) {
   					members.settings.transition_complete.call($(images[image_index]), {
-  						'transition' : 'fade'
+  						'transition' : 'fade',
+  						'index'      : image_index
   					});
   				}
 
@@ -374,10 +377,7 @@
 			if (fire) {
 				if (members.current_image == members.image_count - 1) {
 					if (members.settings.cycle_complete != null) {
-						members.settings.cycle_complete.call(undefined, {
-							'total_images' : members.image_count,
-							'current_image': members.current_image + 1
-						});
+						members.settings.cycle_complete.call(undefined);
 					}
 				}
 			}
