@@ -205,7 +205,7 @@
 	  					members.settings.transition_complete.call(next_image, {
 	  						'transition' : 'slide',
 	  						'direction'  : 'left',
-	  						'index'      : next_image.data('image').split('-')[1]
+	  						'index'      : parseInt(next_image.data('image').split('-')[1])
 	  					});
 	  				}
 
@@ -268,7 +268,7 @@
 	  					members.settings.transition_complete.call(prev_image, {
 	  						'transition' : 'slide',
 	  						'direction'  : 'right',
-	  						'index'      : prev_image.data('image').split('-')[1]
+	  						'index'      : parseInt(prev_image.data('image').split('-')[1])
 	  					});
 	  				}
 
