@@ -1,4 +1,4 @@
-<pre>stretcharmstrong
+stretcharmstrong
 ================
 
 jQuery Plugin for HTML Background Resizing and Slide Show
@@ -19,15 +19,13 @@ Features;-
 Usage;
 
 - Initialise stretcharmstrong with default settings like so;
-</pre>
-<code>
-  $('div#wrapping-element').stretcharmstrong();
-</code>
+
 <pre>
+  $('div#wrapping-element').stretcharmstrong();
+</pre>
 
 - You can set some options and callbacks like so (these are defaults);
-</pre>
-<code>
+<pre>
   $('div#wrapping-element').stretcharmstrong({
     // options
     'rotate'     : false,                             
@@ -43,9 +41,8 @@ Usage;
     cycle_complete : function() {},
     rotate_changed : function(event) {}    
   });
-</code>
+</pre>
 
-<pre>
 - Explantion of options;-
 
   rotate     : rotate images? true or false
@@ -68,7 +65,6 @@ Usage;
   
   rotate_changed : fires when the rotation interval has been stopped or started passing event data as follows;-
     rotate - 'resumed' or 'paused'
-</pre>
 
 Please see home.php for the markup and script.js in this repo for a basic example of implementation.
 
