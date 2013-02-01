@@ -1,6 +1,6 @@
 /*
 	stretcharmstrong: developed by Anthony Armstrong
-		version: 1.0.0
+		version: 1.1.0
 		last modified: 2013-02-01
 */
 
@@ -75,7 +75,7 @@
 
 			// give an id to each element
 			$(elements).each(function(i) {
-				$(this).attr('id', 'stretcharmstrong-' + i);
+				$(this).attr('data-image', 'stretcharmstrong-' + i);
 			});
 
 			// wait for window load event
@@ -327,7 +327,7 @@
 		fast_forward : function(image_index) {
 
 			// get desired image
-			var element = $('#stretcharmstrong-' + image_index);
+			var element = $(members.wrapper).find(members.settings.element + '[data-image="stretcharmstrong-' + image_index + '"]');
 
 			// get current image and clone it
 			var current_image = members.wrapper.children(members.settings.element)[0];
