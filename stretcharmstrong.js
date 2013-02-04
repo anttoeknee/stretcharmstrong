@@ -1,7 +1,7 @@
 /*
 	stretcharmstrong: developed by Anthony Armstrong
-		version: 1.1.0
-		last modified: 2013-02-01
+		version: 1.1.3
+		last modified: 2013-02-04
 */
 
 (function($) {
@@ -24,7 +24,7 @@
 		} else {
 
 			// throw an exception
-			$.error('Method ' + method + ' does not exist on jQuery.stretcharmstrong');
+			$.error('stretcharmstrong - method ' + method + ' does not exist.');
 		}
 
 	};
@@ -35,7 +35,10 @@
 		wrapper       : null,
 		current_image : 0,
 		image_count   : 0,
-		interval      : false
+		master_count  : 0,
+		interval      : false,
+		images_array  : null,
+		initialized   : false
 	};
 
 	var private_methods = {
@@ -97,6 +100,9 @@
 
 				// fade in first image
 				private_methods.show_image(0);
+
+				// set 'initialized'
+				members.initialized = true;
 				
 				if (callback != null) {
 					callback.call();
@@ -200,13 +206,31 @@
 						'left' : -99999
 					});
 
-					// call transition complete callback
+	  				// call transition complete callback
 					if (members.settings.transition_complete != null) {
-	  					members.settings.transition_complete.call(next_image, {
-	  						'transition' : 'slide',
-	  						'direction'  : 'left',
-	  						'index'      : parseInt(next_image.data('image').split('-')[1])
-	  					});
+
+						// optionally ignore transition callback for first transition...
+						if (members.settings.ignore_first) {
+							members.settings.ignore_first = false; // reset
+
+							if (members.master_count > 1) {
+								members.settings.transition_complete.call(next_image, {
+			  						'transition' : 'slide',
+			  						'direction'  : 'left',
+			  						'index'      : parseInt(next_image.data('image').split('-')[1])
+			  					});
+							}
+
+						} else {
+
+							members.settings.transition_complete.call(next_image, {
+		  						'transition' : 'slide',
+		  						'direction'  : 'left',
+		  						'index'      : parseInt(next_image.data('image').split('-')[1])
+		  					});
+
+						}
+			
 	  				}
 
 	  				// check what image we're on for cycle complete callback
@@ -263,13 +287,31 @@
 						'left' : -99999
 					});
 
-					// call transition complete callback
+	  				// call transition complete callback
 					if (members.settings.transition_complete != null) {
-	  					members.settings.transition_complete.call(prev_image, {
-	  						'transition' : 'slide',
-	  						'direction'  : 'right',
-	  						'index'      : parseInt(prev_image.data('image').split('-')[1])
-	  					});
+
+						// optionally ignore transition callback for first transition...
+						if (members.settings.ignore_first) {
+							members.settings.ignore_first = false; // reset
+
+							if (members.master_count > 1) {
+								members.settings.transition_complete.call(prev_image, {
+			  						'transition' : 'slide',
+			  						'direction'  : 'right',
+			  						'index'      : parseInt(prev_image.data('image').split('-')[1])
+			  					});
+							}
+
+						} else {
+
+							members.settings.transition_complete.call(prev_image, {
+		  						'transition' : 'slide',
+		  						'direction'  : 'right',
+		  						'index'      : parseInt(prev_image.data('image').split('-')[1])
+		  					});
+
+						}
+			
 	  				}
 
 	  				// check what image we're on for cycle complete callback
@@ -282,8 +324,6 @@
 		},
 
 		show_image : function(image_index) {
-
-			//console.log(members.current_image);
 
 			// get handle on images
 			var images = members.wrapper.children(members.settings.element);
@@ -301,10 +341,27 @@
 
 				// call transition complete callback
 				if (members.settings.transition_complete != null) {
-  					members.settings.transition_complete.call($(images[image_index]), {
-  						'transition' : 'fade',
-  						'index'      : image_index
-  					});
+
+					// optionally ignore transition callback for first transition...
+					if (members.settings.ignore_first) {
+						members.settings.ignore_first = false; // reset
+
+						if (members.master_count > 1) {
+							members.settings.transition_complete.call($(images[image_index]), {
+		  						'transition' : 'fade',
+		  						'index'      : image_index
+		  					});
+						}
+
+					} else {
+
+						members.settings.transition_complete.call($(images[image_index]), {
+	  						'transition' : 'fade',
+	  						'index'      : image_index
+	  					});
+
+					}
+		
   				}
 
 			});
@@ -382,7 +439,52 @@
 				}
 			}
 
+			members.master_count++;
 			members.current_image = index;
+
+		},
+
+		ajax_request : function() {
+
+			$.ajax({
+				url: members.settings.ajax,
+				async : false,
+		  		success: function(data) {
+			  		// members.image_json must result in an array of image paths...
+			    	members.images_array = data.images;
+			    	if (!$.isArray(members.images_array)) {
+			    		$.error('stretcharmstrong - the data returned from the server was not an array.');
+			    	}
+			  	},
+			  	error: function(data) {
+			  		$.error('stretcharmstrong - there was a problem obtaining data from the server.');
+			  	}
+			});
+		},
+
+		inject_to_dom : function() {
+
+			// if there is no wrapper
+			if (!members.initialized) {
+
+				// build wrapping element
+				members.wrapper = $('<div id="stretcharmstrong"></div>');
+
+			}
+
+			// clear wrapper of all elements
+			members.wrapper.empty();
+
+			// append new images
+			for (var i = 0; i < members.images_array.length; i++) {
+
+				// build image...
+				var image = $('<img src="' + members.images_array[i] + '" alt="Image ' + i + '" />');
+
+				members.wrapper.append(image);
+
+			}
+
 
 		}
 
@@ -394,16 +496,19 @@
 			
 			// create some defaults, extending them with any options that were provided
 		    members.settings = $.extend({
-		    	'rotate'     : false,
-		    	'interval'   : 1000,
-		    	'transition' : 'fade',
-		    	'duration'   : 1000,
-		    	'offset'     : { // TODO: implement functionality for offsets
+		    	'rotate'       : false,
+		    	'interval'     : 1000,
+		    	'transition'   : 'fade',
+		    	'duration'     : 1000,
+		    	'offset'       : { // TODO: implement functionality for offsets
 		    		'x' : 0,
 		    		'y' : 0
 		      	},
-		      	'element'     : 'img',
-		      	'background' : true,
+		      	'element'      : 'img',
+		      	'background'   : true,
+		      	'ajax'         : null,
+		      	'images'       : null,
+		      	'ignore_first' : false,
 		      	transition_complete : function(event) {},
 		      	cycle_complete : function(event) {},
 		      	rotate_changed : function(event) {}
@@ -418,15 +523,41 @@
 		    	// is it the document?
 		    	if (members.wrapper[0].nodeName == '#document') {
 
-		    		// TODO: process array of images
+		    		// is the ajax path set?
+		    		if (members.settings.ajax != null) {
 
-		    	} else {
+		    			// make the request...
+		    			private_methods.ajax_request();
 
-		    		private_methods.prepare_elements(function() {
-		    			private_methods.resize_images();
-		    		});
+		    		}
 
-		    	}
+		    		// if images have been passed in 
+		    		if (members.settings.images != null) {
+
+		    			// are they an array?
+		    			if (!$.isArray(members.settings.images)) {
+		    				$.error('stretcharmstrong - the data passed as images is not an array.');
+		    			}
+
+		    			// set images_array
+		    			members.images_array = members.settings.images;
+
+		    		}
+
+		    		if (members.settings.images == null && members.settings.ajax == null) {
+		    			$.error('stretcharmstrong - you must pass in an array of images or an ajax path when attaching to the document');
+		    		} 
+
+		    		// call inject method
+		    		private_methods.inject_to_dom();
+
+
+		    	} 
+
+		    	// prepare elements...
+	    		private_methods.prepare_elements(function() {
+	    			private_methods.resize_images();
+	    		});
 
 		    	// bind resize event to window
 		    	$(window).bind('resize.stretcharmstrong', function() {
