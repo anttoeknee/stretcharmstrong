@@ -16,10 +16,11 @@ Features
 - Can be used as backgrounds or in the document flow
 - Works in 'responsive' sites (as long as parent wrapper is 'fluid')
 - Built-in methods for slide show controls
+- Can be used with rendered elements, image paths or AJAX requests
 - Cross browser compatible (tested on Chrome, Firefox, IE7-10)
 
-Usage
------
+Usage (Pre-rendered HTML)
+-------------------------
 
 - You can initialize stretcharmstrong with default settings like so;
 
@@ -31,27 +32,52 @@ Usage
 
 <pre>
   $('div#wrapping-element').stretcharmstrong({
-    'rotate'     : false,                             
-    'interval'   : 5000,                              
-    'transition' : 'fade',                            
-    'duration'   : 1000,                              
-    'element'    : 'img',                             
-    'background' : true,                              
+    'rotate'      : false,                             
+    'interval'    : 5000,                              
+    'transition'  : 'fade',                            
+    'duration'    : 1000,                              
+    'element'     : 'img',                             
+    'background'  : true,
+    'ignore_first : false,
     transition_complete : function(event) {},                                                                   
     cycle_complete : function() {},
     rotate_changed : function(event) {}    
   });
 </pre>
 
+Usage (Attached to document)
+-------------------------------------------------------------------------------------
+*use this if using images from an array or ajax request*
+
+<pre>
+  $(document).stretcharmstrong({
+    'rotate'     : true,                                                      
+    'transition' : 'slide',                            
+    'duration'   : 1000,                              
+    'element'    : 'img',                             
+    'background' : true,
+    'ignore_first : true,
+    'ajax'       : 'path/to/server/script',
+    transition_complete : function(event) {},                                                                   
+    cycle_complete : function() {},
+    rotate_changed : function(event) {}    
+  });
+</pre>
+
+  - **NOTE:** You **can't** use both the 'images' and 'ajax' arguments at the same time, doing so will result in the plugin using the 'images' argument.
+
 Options
 -----------------------
 
-  - *rotate*     : rotate images? true or false 
-  - *interval*   : the rotate interval in miliseconds 
-  - *transition* : the transition type for the rotate ('fade' or 'slide') 
-  - *duration*   : the transition duration in miliseconds 
-  - *element*    : the element type (semantically) to be worked with  
-  - *background* : use as background or inline (true or false) 
+  - **rotate**       : *bool*   | rotate images? 
+  - **interval**     : *int*    | the rotate interval in miliseconds 
+  - **transition**   : *string* | the transition type for the rotate (currently 'fade' or 'slide') 
+  - **duration**     : *int*    | the transition duration in miliseconds 
+  - **element**      : *string* | the name of the HTML element type to be worked with  
+  - **background**   : *bool*   | use as background or inline 
+  - **ignore_first** : *bool*   | ignore 'transition_complete' callback after first element? (v1.1.3)
+  - **ajax**         : *string* | a path to a server side AJAX handler (v1.1.3)
+  - **images**       : *array*  | an array of image paths to use (v1.1.3)
  
 Callbacks
 -----------------------
