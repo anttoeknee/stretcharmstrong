@@ -64,6 +64,8 @@ Usage (Attached to document)
   });
 </pre>
 
+  - I have included a Fuel REST controller (background.php) which you can use as your AJAX handler if you like (put it in Fuel/App/Classes/Controller), you will have to change the paths to suit your directory structure, I am not a PHP developer, so if the world explodes as a result of using this, you were warned!!!
+
   - **NOTE:** You **can't** use both the 'images' and 'ajax' arguments at the same time, doing so will result in the plugin using the 'images' argument.
 
 Options
