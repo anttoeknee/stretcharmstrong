@@ -11,10 +11,13 @@ $(document).ready(function() {
 	 */
   	var slides = $('div.backgrounds');
   	slides.stretcharmstrong({
-    	'rotate'     : true,
+    	'rotate'     : false,
     	'interval'   : 5000,
-    	'duration'   : 1000,
-    	'transition' : 'slide',
+    	'transition' : {
+    		'type'        : 'slide',
+    		'duration'    : 1500,
+    		'orientation' : 'vertical'
+    	},
     	'element'    : 'img',
     	'background' : true,
     	transition_complete : function(event) { // some properties for the transition...
@@ -22,7 +25,7 @@ $(document).ready(function() {
     		console.log(event); 
     		console.log('transition complete');
     	},
-    	cycle_complete : function() { 
+    	cycle_complete : function() {  
     		console.log('cycle complete');
     	},
     	rotate_changed : function(event) { // info on the state of rotation
