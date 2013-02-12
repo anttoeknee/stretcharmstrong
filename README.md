@@ -34,8 +34,11 @@ Usage (Pre-rendered HTML)
   $('div#wrapping-element').stretcharmstrong({
     'rotate'      : false,                             
     'interval'    : 5000,                              
-    'transition'  : 'fade',                            
-    'duration'    : 1000,                              
+    'transition' : {
+      'type'        : 'slide',
+      'duration'    : 1500,
+      'orientation' : 'vertical'
+    },                                                         
     'element'     : 'img',                             
     'background'  : true,
     'ignore_first : false,
@@ -52,8 +55,11 @@ Usage (Attached to document)
 <pre>
   $(document).stretcharmstrong({
     'rotate'     : true,                                                      
-    'transition' : 'slide',                            
-    'duration'   : 1000,                              
+    'transition' : {
+      'type'        : 'slide',
+      'duration'    : 1500,
+      'orientation' : 'vertical'
+    },                                      
     'element'    : 'img',                             
     'background' : true,
     'ignore_first : true,
@@ -73,8 +79,10 @@ Options
 
   - **rotate**       : *bool*   | rotate images? 
   - **interval**     : *int*    | the rotate interval in miliseconds 
-  - **transition**   : *string* | the transition type for the rotate (currently 'fade' or 'slide') 
-  - **duration**     : *int*    | the transition duration in miliseconds 
+  - **transition**
+  - - - **type**        : *string* | the transition type for the rotate (currently 'fade' or 'slide') (v1.1.4)
+  - - - **duration**    : *int*    | the transition duration in miliseconds (v1.1.4)
+  - - - **orientation** : *string* | the transition orientation, 'horizontal' or 'vertical' (v1.1.4)
   - **element**      : *string* | the name of the HTML element type to be worked with  
   - **background**   : *bool*   | use as background or inline 
   - **ignore_first** : *bool*   | ignore 'transition_complete' callback after first element? (v1.1.3)
