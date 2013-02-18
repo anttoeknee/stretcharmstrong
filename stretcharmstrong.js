@@ -1,7 +1,7 @@
 /*
 	stretcharmstrong: developed by Anthony Armstrong
-		version: 1.1.4
-		last modified: 2013-02-12
+		version: 1.1.5
+		last modified: 2013-02-18
 */
 
 (function($) {
@@ -30,76 +30,82 @@
 	};
 
 	var members = {
-		settings      : null,
-		image_attr    : {},
-		wrapper       : null,
-		current_image : 0,
-		image_count   : 0,
-		master_count  : 0,
-		interval      : false,
-		images_array  : null,
-		initialized   : false
+		settings        : null,
+		image_attr      : {},
+		wrapper         : null,
+		current_element : 0,
+		element_count   : 0,
+		master_count    : 0,
+		interval        : false,
+		images_array    : null,
+		initialized     : false
 	};
 
 	var private_methods = {
 
 		prepare_elements : function(callback) {
 
-			// remove img_parent and add to body (so always top left)
+			// remove element parent and add to body (so always top left)
 		 	if (members.settings.background == true) {
 				members.wrapper.prependTo($('body'));
-
-				// set parent styles
-				members.wrapper.css({
-					'position' : 'absolute',
-					'display'  : 'block',
-					'top'      : '0px',
-					'left'     : '0px',
-					'width'    : '100%',
-					'height'   : '100%',
-					'z-index'  : '-1',
-					'overflow' : 'hidden'
-				});
-
 			}
 
-			// give some basic styling to images (so they dont show as soon as they load)
+			// set/override parent styles
+			members.wrapper.css({
+				'position' : 'absolute',
+				'display'  : 'block',
+				'top'      : '0px',
+				'left'     : '0px',
+				'width'    : '100%',
+				'height'   : '100%',
+				'z-index'  : '-1',
+				'overflow' : 'hidden'
+			});
+
+			// give some basic styling to elements
 			var elements = members.wrapper.children(members.settings.element);
 			var reversed_elements = elements.toArray().reverse();
 			$(reversed_elements).each(function(i) {
+				var z_index = members.settings.transition.type == 'fade' ? i : 1;
 				$(this).css({
 					'position' : 'absolute',
 					'display'  : 'none',
 					'top'      : '0px',
 					'left'     : '0px',
-					'z-index'  : i
+					'z-index'  : z_index
 				});
 			});
 
 			// give an id to each element
 			$(elements).each(function(i) {
-				$(this).attr('data-image', 'stretcharmstrong-' + i);
+				$(this).attr('data-index', i);
+
+				// give the 1st slide (current by default) a data of current
+				if (i == 0) {
+					$(this).attr('data-slide', 'current');
+				}
+
 			});
 
-			// wait for window load event
+			// wait for window load event (just in case were dealing with images)
 			$(window).bind('load.stretcharmstrong', function() {
 
-				// for each img...
+				// for each element...
 				members.wrapper.children(members.settings.element).each(function(i) {
 
-					// store original width and height
+					// store original width and height // TODO: use computed styles instead...
 					members.image_attr[i] = {
 						'width'  : $(this).width(),
 						'height' : $(this).height()
 					};
 
-					// update image count
-					members.image_count++;
+					// update element count
+					members.element_count++;
 
 				});
 
-				// fade in first image
-				private_methods.show_image(0);
+				// fade in first element
+				private_methods.show_element(0);
 
 				// set 'initialized'
 				members.initialized = true;
@@ -111,13 +117,13 @@
 			});
 		},
 
-		resize_images : function() {	
+		resize_elements : function() {	
 
-			// for each image
+			// for each element
 			members.wrapper.children(members.settings.element).each(function(i) {
 
 				/*
-					calculate the new width and height for the image whilst maintaing aspect ratio
+					calculate the new width and height for the element whilst maintaing aspect ratio
 				*/
 
 				var new_height = 0;
@@ -129,7 +135,7 @@
 				var mod = members.wrapper.width() % scaled_width;
 
 				// because the formula only has the parent as a max, we need to add on the difference between the parent and the scaled width (if there is one)
-				new_width = (mod != members.wrapper.width()) ? (scaled_width % members.wrapper.width()) +  (members.wrapper.width() - scaled_width) : scaled_width
+				new_width = (mod != members.wrapper.width()) ? (scaled_width % members.wrapper.width()) + (members.wrapper.width() - scaled_width) : scaled_width
 
 				var calc_height  = parseInt(members.image_attr[i].height / members.image_attr[i].width * new_width);
 				var scaled_height = calc_height > new_height ? calc_height : new_height;
@@ -145,7 +151,7 @@
 
 		},
 
-		rotate_images : function() {
+		rotate_elements : function() {
 
 			if (members.settings.rotate === true) {
 				members.interval = new GlobalTimer(members.settings.interval, [
@@ -183,35 +189,22 @@
 
 		},
 
-		element_slide_complete : function(current_image, new_image, new_index, images, transition_direction) {
-
-	
-			if (transition_direction == 'forward') {
-				// append current image to the end
-				current_image.appendTo(members.wrapper);
-			} 
-
-			if (transition_direction == 'backward') {
-				// prepend current image to the beginning
-				new_image.prependTo(members.wrapper);
-			} 
+		element_slide_complete : function(current_image, new_image, new_index, transition_direction) {
 
 			var pos = this.get_default_position();
-
 			var css_pos = members.settings.transition.orientation == 'horizontal' ? 'left' : 'top';
 
-			// increment z-index of next image
-			new_image.css({
-				'z-index' : '+=1'
-			});
+			// update data-slide
+			new_image.attr('data-slide', 'current');
 
-			// set z-index to length of array for current image and reset left
-			var new_z_index = images.length - 1;
-			current_image.css({
-				'z-index' : new_z_index,
+			// reset left and top
+			members.wrapper.children(members.settings.element).not(new_image).css({
 				'left'    : pos.left,
 				'top'     : pos.top
 			});
+
+			// update data-slide
+			current_image.removeAttr('data-slide');
 
 			// call transition complete callback
 			if (members.settings.transition_complete != null) {
@@ -224,7 +217,7 @@
 						members.settings.transition_complete.call(new_image, {
 	  						'transition' : 'slide',
 	  						'direction'  : transition_direction,
-	  						'index'      : parseInt(new_image.data('image').split('-')[1])
+	  						'index'      : new_index
 	  					});
 					}
 
@@ -233,16 +226,13 @@
 					members.settings.transition_complete.call(new_image, {
   						'transition' : 'slide',
   						'direction'  : transition_direction,
-  						'index'      : parseInt(new_image.data('image').split('-')[1])
+  						'index'      : new_index
   					});
 
 				}
 
 				// check what image we're on for cycle complete callback
 				private_methods.image_indexer(new_index, true);
-
-				// remove evil-clone 
-				$(members.wrapper).find('.evil-clone').remove();
 	
 			}
 
@@ -258,8 +248,8 @@
 			var image_width = images.width();
 			var image_height = images.height();
 
-			var current_image = $(images[0]);
-			var next_image = $(images[1]);
+			var current_image = members.wrapper.find('[data-slide="current"]');
+			var next_image = members.wrapper.find('[data-index="' + new_index + '"]');
 
 			if (!current_image.is(':animated') && !next_image.is(':animated')) {
 
@@ -283,7 +273,6 @@
 							current_image, 
 							next_image, 
 							new_index, 
-							images,
 							'forward'
 						);
 					});
@@ -310,7 +299,6 @@
 							current_image, 
 							next_image, 
 							new_index, 
-							images,
 							'forward'
 						);
 					});
@@ -331,8 +319,8 @@
 			var image_height = images.height();
 
 			
-			var current_image = $(images[0]);
-			var prev_image = $(images[images.length - 1]);
+			var current_image = members.wrapper.find('[data-slide="current"]');
+			var prev_image = parseInt(current_image.data('index')) == 0 ? members.wrapper.find('[data-index="' + (members.element_count - 1) + '"]') : current_image.prev();
 
 			if (!current_image.is(':animated') && !prev_image.is(':animated')) {
 
@@ -356,7 +344,6 @@
 							current_image, 
 							prev_image, 
 							new_index, 
-							images,
 							'backward'
 						);
 					});
@@ -382,7 +369,6 @@
 							current_image, 
 							prev_image, 
 							new_index, 
-							images,
 							'backward'
 						);
 					});
@@ -393,7 +379,7 @@
 
 		},
 
-		show_image : function(image_index) {
+		show_element : function(image_index) {
 
 			// get handle on images
 			var images = members.wrapper.children(members.settings.element);
@@ -401,7 +387,7 @@
 			if (!$(images).is(':animated')) {
 
 				// is the next image outside the range?
-				if (image_index > members.image_count - 1) {
+				if (image_index > members.element_count - 1) {
 
 					// reset new_index to 0
 					image_index = 0;
@@ -452,7 +438,7 @@
 				});
 
 				// check what image we're on for cycle complete callback
-				private_methods.image_indexer(image_index + 1, true);
+				private_methods.image_indexer(image_index, true);
 
 			}
 
@@ -460,56 +446,23 @@
 
 		fast_forward : function(image_index) {
 
-			// get desired image
-			var element = $(members.wrapper).find(members.settings.element + '[data-image="stretcharmstrong-' + image_index + '"]');
+			// get current element 
+			var current_image = $(members.wrapper).find(members.settings.element + '[data-slide="current"]');
 
-			// get current image and clone it
-			var current_image = members.wrapper.children(members.settings.element)[0];
-			var current_image_clone = $(current_image).clone(false);
+			// dont do anything if we're already on the slide we have clicked
+			if (parseInt(current_image.data('index')) != image_index) {
 
-			if (!$(current_image).is(':animated')) {
+				// everything in place, call slide left...
+				private_methods.slide_forward(image_index);
 
-				// determine the z-index of the cloned image and set it and put image in place...
-				var z_index = parseInt($(current_image).css('z-index')) + 1;
-				current_image_clone.addClass('evil-clone');
-				current_image_clone.css({
-					'z-index' : z_index,
-					'left'    : 0
-				});
-
-				// manipulate stack...
-				var previous_elements = element.prevAll(':not(.evil-clone)');
-
-				// reverse previous images
-				var reversed_previous_elements = $(previous_elements.toArray().reverse());
-				reversed_previous_elements.appendTo(members.wrapper);
-
-				// insert cloned image at the beginning of the stack
-				current_image_clone.prependTo(members.wrapper);
-
-				var pos = this.get_default_position();
-
-				// set 'left' and 'z-index' of previous elements to '-99999' and +1
-				reversed_previous_elements.each(function() {
-					var current_z = parseInt($(this).css('z-index'));
-					var new_z = current_z + 1; 
-					$(this).css({
-						'z-index' : new_z,
-						'left' : pos.left,
-						'top'  : pos.top
-					});
-				});
 			}
-
-			// everything in place, call slide left...
-			private_methods.slide_forward();
-			
+	
 		},
 
 		image_indexer : function(index, fire) {
 
 			if (fire) {
-				if (members.current_image == members.image_count - 1) {
+				if (members.current_element == members.element_count - 1) {
 					if (members.settings.cycle_complete != null) {
 						members.settings.cycle_complete.call(undefined);
 					}
@@ -517,7 +470,7 @@
 			}
 
 			members.master_count++;
-			members.current_image = index;
+			members.current_element = index;
 
 		},
 
@@ -636,16 +589,16 @@
 
 		    	// prepare elements...
 	    		private_methods.prepare_elements(function() {
-	    			private_methods.resize_images();
+	    			private_methods.resize_elements();
 	    		});
 
 		    	// bind resize event to window
 		    	$(window).bind('resize.stretcharmstrong', function() {
-		    		private_methods.resize_images();
+		    		private_methods.resize_elements();
 		    	});
 
 		    	// start interval if applicable
-				private_methods.rotate_images();
+				private_methods.rotate_elements();
 		    	
 		    }
 		    
@@ -658,10 +611,10 @@
 				members.interval.cancel();
 			}
 
-			var new_index = members.current_image + 1;
+			var new_index = members.current_element + 1;
 
 			// is the next image outside the range?
-			if (new_index > members.image_count - 1) {
+			if (new_index > members.element_count - 1) {
 
 				// reset new_index to 0
 				new_index = 0;
@@ -672,7 +625,7 @@
 
 				case 'fade' :
 					// call show method
-					private_methods.show_image(members.current_image);
+					private_methods.show_element(new_index);
 				break;
 
 				case 'slide' :
@@ -685,7 +638,7 @@
 
 
 			// start interval again if applicable
-			private_methods.rotate_images();
+			private_methods.rotate_elements();
 
 		},
 
@@ -696,13 +649,13 @@
 				members.interval.cancel();
 			}
 
-			var new_index = members.current_image - 1;
+			var new_index = members.current_element - 1;
 
 			// is the next image outside the range?
 			if (new_index < 0) {
 
 				// reset new_index to 
-				new_index = members.image_count - 1;
+				new_index = members.element_count - 1;
 
 			}
 
@@ -710,7 +663,7 @@
 
 				case 'fade' :
 					// call show method
-					private_methods.show_image(members.current_image);
+					private_methods.show_element(members.current_element);
 				break;
 
 				case 'slide' :
@@ -722,7 +675,7 @@
 			}
 
 			// start interval again if applicable
-			private_methods.rotate_images();
+			private_methods.rotate_elements();
 
 			
 			
@@ -738,7 +691,7 @@
 			switch(members.settings.transition.type) {
 
 				case 'fade' :
-					private_methods.show_image(image_index);
+					private_methods.show_element(image_index);
 				break;
 
 				case 'slide' :
@@ -749,7 +702,7 @@
 			}
 
 			// start interval again if applicable
-			private_methods.rotate_images();
+			private_methods.rotate_elements();
 
 		},
 
@@ -771,7 +724,7 @@
 		resume : function() {
 
 			// start interval again if applicable
-			private_methods.rotate_images();
+			private_methods.rotate_elements();
 
 		}
 

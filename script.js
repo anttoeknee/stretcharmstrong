@@ -16,7 +16,7 @@ $(document).ready(function() {
     	'transition' : {
     		'type'        : 'slide',
     		'duration'    : 1500,
-    		'orientation' : 'vertical'
+    		'orientation' : 'horizontal'
     	},
     	'element'    : 'img',
     	'background' : true,
