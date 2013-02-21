@@ -18,8 +18,9 @@ $(document).ready(function() {
     		'duration'    : 1500,
     		'orientation' : 'horizontal'
     	},
-    	'element'    : 'img',
-    	'background' : true,
+    	'element'    : 'div',
+    	'resize'     : false,
+    	'background' : false,
     	transition_complete : function(event) { // some properties for the transition...
     		console.log(this); // the image that has been transitioned in...
     		console.log(event); 

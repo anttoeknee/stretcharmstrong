@@ -1,7 +1,7 @@
 /*
 	stretcharmstrong: developed by Anthony Armstrong
-		version: 1.1.5
-		last modified: 2013-02-18
+		version: 1.1.6
+		last modified: 2013-02-20
 */
 
 (function($) {
@@ -30,20 +30,22 @@
 	};
 
 	var members = {
-		settings        : null,
-		image_attr      : {},
-		wrapper         : null,
-		current_element : 0,
-		element_count   : 0,
-		master_count    : 0,
-		interval        : false,
-		images_array    : null,
-		initialized     : false
+		settings         : null,
+		image_attr       : {},
+		wrapper          : null,
+		current_element  : 0,
+		element_count    : 0,
+		master_count     : 0,
+		interval         : false,
+		images_array     : null,
+		initialized      : false,
+		transition_state : 'paused',
+		onloads_triggered : 0
 	};
 
 	var private_methods = {
 
-		prepare_elements : function(callback) {
+		prepare_elements : function() {
 
 			// remove element parent and add to body (so always top left)
 		 	if (members.settings.background == true) {
@@ -58,7 +60,7 @@
 				'left'     : '0px',
 				'width'    : '100%',
 				'height'   : '100%',
-				'z-index'  : '-1',
+				'z-index'  : '0',
 				'overflow' : 'hidden'
 			});
 
@@ -87,36 +89,107 @@
 
 			});
 
-			// wait for window load event (just in case were dealing with images)
-			$(window).bind('load.stretcharmstrong', function() {
+			var loading_overlay = $(members.settings.loading_element);
 
-				// for each element...
-				members.wrapper.children(members.settings.element).each(function(i) {
+			// optionally wait for custom onload
+			if (members.settings.custom_onloads.count > 0) {
 
-					// store original width and height // TODO: use computed styles instead...
-					members.image_attr[i] = {
-						'width'  : $(this).width(),
-						'height' : $(this).height()
-					};
+				var count = 0;
 
-					// update element count
-					members.element_count++;
+				// set a timeout here as we don't want to wait forever...
+				var onload_timeout = setInterval(function() {
 
-				});
+					count++;
 
-				// fade in first element
-				private_methods.show_element(0);
+					// check onloads
+					if (members.onloads_triggered >= members.settings.custom_onloads.count) {
 
-				// set 'initialized'
-				members.initialized = true;
-				
-				if (callback != null) {
-					callback.call();
+					  	// some onloads fire more than once... TODO: integrate propper api on loads...
+
+						// has a loading element been supplied?
+						if (loading_overlay.size() > 0) {
+
+							// hide it...
+							loading_overlay.fadeOut(300);
+						}
+
+						clearInterval(onload_timeout);
+
+						// carry on...
+						private_methods.prepare_continue();
+
+					}
+
+					// time up has the the custom onload been triggerd?
+					if (count == members.settings.custom_onloads.timeout && members.onloads_triggered < members.settings.custom_onloads.count) {
+
+						// has a loading element been supplied?
+						if (loading_overlay.size() > 0) {
+
+							// hide it...
+							loading_overlay.html('<h2>Sorry, the slides could not be loaded</h2>');
+						}
+
+						// throw an exception
+						$.error('stretcharmstrong - the onready/onload event you are waiting for took too long.');
+
+					}
+
+				}, 1000);
+
+			} else {
+
+				// has a loading element been supplied?
+				if (loading_overlay.size() > 0) {
+
+					// hide it...
+					loading_overlay.fadeOut(300);
 				}
 
-			});
+				private_methods.prepare_continue();
+
+			}
+
 		},
 
+		prepare_continue : function() {
+
+			// for each element...
+			members.wrapper.children(members.settings.element).each(function(i) {
+
+				// store original width and height
+				members.image_attr[i] = {
+					'width'  : $(this).width(),
+					'height' : $(this).height()
+				};
+
+				// update element count
+				members.element_count++;
+
+			});
+
+			// fade in first element
+			private_methods.show_element(0);
+
+			// set 'initialized'
+			members.initialized = true;
+			
+			if (members.settings.resize == true) {
+
+				private_methods.resize_elements();
+
+				// bind resize event to window
+		    	$(window).bind('resize.stretcharmstrong', function() {
+		    		private_methods.resize_elements();
+		    	});
+
+			}
+
+			// start interval if applicable
+			private_methods.rotate_elements();
+
+		},
+			
 		resize_elements : function() {	
 
 			// for each element
@@ -160,12 +233,22 @@
 					}
 				]);
 
-				// call transition complete callback
-				if (members.settings.rotate_changed != null) {
-					members.settings.rotate_changed.call(undefined, {
-						'rotate' : 'resumed'
-					});
+				// only call callbacks if we need to
+				if (members.transition_state == 'paused') {
+
+					// set transition state
+					members.transition_state = 'resumed';
+
+					// call rotate changed callback
+					if (members.settings.rotate_changed != null) {
+						members.settings.rotate_changed.call(undefined, {
+							'rotate' : 'resumed',
+							'count'  : members.master_count
+						});
+					}
 				}
+
+				
 			}
 
 			
@@ -206,6 +289,8 @@
 			// update data-slide
 			current_image.removeAttr('data-slide');
 
+			new_index = parseInt(new_index);
+
 			// call transition complete callback
 			if (members.settings.transition_complete != null) {
 
@@ -217,7 +302,8 @@
 						members.settings.transition_complete.call(new_image, {
 	  						'transition' : 'slide',
 	  						'direction'  : transition_direction,
-	  						'index'      : new_index
+	  						'index'      : new_index,
+	  						'count'      : members.master_count
 	  					});
 					}
 
@@ -226,7 +312,8 @@
 					members.settings.transition_complete.call(new_image, {
   						'transition' : 'slide',
   						'direction'  : transition_direction,
-  						'index'      : new_index
+  						'index'      : new_index,
+  						'count'      : members.master_count
   					});
 
 				}
@@ -394,6 +481,8 @@
 
 				}
 
+				image_index = parseInt(image_index);
+
 				// fade in selected image
 				$(images[image_index]).fadeIn(members.settings.transition.duration - 200, function() {
 
@@ -407,7 +496,8 @@
 							if (members.master_count > 1) {
 								members.settings.transition_complete.call($(images[image_index]), {
 			  						'transition' : 'fade',
-			  						'index'      : image_index
+			  						'index'      : image_index,
+			  						'count'      : members.master_count
 			  					});
 							}
 
@@ -415,8 +505,9 @@
 
 							members.settings.transition_complete.call($(images[image_index]), {
 		  						'transition' : 'fade',
-		  						'index'      : image_index
-		  					});
+		  						'index'      : image_index,
+		  						'count'      : members.master_count
+		  					}); 
 
 						}
 			
@@ -541,7 +632,13 @@
 		      	'background'   : true,
 		      	'ajax'         : null,
 		      	'images'       : null,
+		      	'resize'       : true,
 		      	'ignore_first' : false,
+		      	'custom_onloads': {
+		      		'count' : 0,
+		      		'timeout' : 10
+		      	},
+		      	'loading_element' : null,
 		      	transition_complete : function(event) {},
 		      	cycle_complete : function(event) {},
 		      	rotate_changed : function(event) {}
@@ -588,18 +685,8 @@
 		    	} 
 
 		    	// prepare elements...
-	    		private_methods.prepare_elements(function() {
-	    			private_methods.resize_elements();
-	    		});
+	    		private_methods.prepare_elements();
 
-		    	// bind resize event to window
-		    	$(window).bind('resize.stretcharmstrong', function() {
-		    		private_methods.resize_elements();
-		    	});
-
-		    	// start interval if applicable
-				private_methods.rotate_elements();
-		    	
 		    }
 		    
 		},
@@ -713,11 +800,19 @@
 				members.interval.cancel();
 			}
 
-			// call transition complete callback
-			if (members.settings.rotate_changed != null) {
-				members.settings.rotate_changed.call(undefined, {
-					'rotate' : 'paused'
-				});
+			// only call callbacks if we need to
+			if (members.transition_state == 'resumed') {
+
+				// set transition state
+				members.transition_state = 'paused';
+
+				// call rotate state change callback
+				if (members.settings.rotate_changed != null) {
+					members.settings.rotate_changed.call(undefined, {
+						'rotate' : 'paused',
+						'count'  : members.master_count
+					});
+				}
 			}
 		},
 
@@ -726,6 +821,12 @@
 			// start interval again if applicable
 			private_methods.rotate_elements();
 
+		},
+
+		continue_load : function() {
+			if (members.settings.custom_onloads.count > 0) {
+				members.onloads_triggered++;
+			}
 		}
 
 
