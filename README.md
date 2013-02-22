@@ -1,5 +1,5 @@
-stretcharmstrong
-================
+stretcharmstrong (v1.1.6)
+=========================
 
 jQuery Plugin for HTML Background Resizing and Slide Show
 
@@ -77,7 +77,7 @@ Usage (Attached to document)
 Options
 -----------------------
 
-  - **rotate**       : *bool*   | rotate images? 
+  - **rotate**       : *bool*   | rotate elements? 
   - **interval**     : *int*    | the rotate interval in miliseconds 
   - **transition**
   - - - **type**        : *string* | the transition type for the rotate (currently 'fade' or 'slide') (v1.1.4)
@@ -88,6 +88,11 @@ Options
   - **ignore_first** : *bool*   | ignore 'transition_complete' callback after first element? (v1.1.3)
   - **ajax**         : *string* | a path to a server side AJAX handler (v1.1.3)
   - **images**       : *array*  | an array of image paths to use (v1.1.3)
+  - **resize**       : *bool*   | resize elements? (v1.1.6)
+  - **custom_onloads**  (v1.1.6)
+  - - - **count**         : *int* | how many on loads are you waiting for? e.g. YouTube and Vimeo = 2
+  - - - **timeout**       : *int* | max amount of seconds to wait for onload events
+  - **loading_element**  : *string* | the selector of the element you want to show whilst the elements are loading (v1.1.6)
  
 Callbacks
 -----------------------
@@ -96,6 +101,7 @@ Callbacks
   - *transition* : the transition type 
   - *direction*  : which direction the slide came from (if transition is slide) 
   - *index*      : the index of the image being transitioned in 
+  - *count*      : the total count of all transitions (v1.1.6)
    
   - the *this* keyword is a reference to the image being transitioned in 
     
@@ -103,6 +109,7 @@ Callbacks
  
 **rotate_changed** : fires when the rotation interval has been stopped or started passing event data as follows;- 
   - *rotate* : 'resumed' or 'paused' 
+  - *count*  : the total count of all transitions (v1.1.6)
 
 Methods
 -----------------------
@@ -119,6 +126,7 @@ The methods available are;-
   - **jumpto** : show the element whose index is that given as an argument
   - **pause**  : pause the rotation
   - **resume** : resume the rotation
+  - **continue** : use if 'custom_onloads' setting is greater than 0 to indicate when the onload you are waiting for has loaded (e.g. inside the 'youTubeApiReady' handler). You must call this function for each onload you are waiting for. (v1.1.6) 
 
 Please see home.php for the markup and script.js in this repo for a basic example of implementation.
 
