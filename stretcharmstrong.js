@@ -1,7 +1,7 @@
 /*
 	stretcharmstrong: developed by Anthony Armstrong
 		version: 1.1.6
-		last modified: 2013-02-20
+		last modified: 2013-02-22
 */
 
 (function($) {
@@ -47,22 +47,8 @@
 
 		prepare_elements : function() {
 
-			// remove element parent and add to body (so always top left)
-		 	if (members.settings.background == true) {
-				members.wrapper.prependTo($('body'));
-			}
-
-			// set/override parent styles
-			members.wrapper.css({
-				'position' : 'absolute',
-				'display'  : 'block',
-				'top'      : '0px',
-				'left'     : '0px',
-				'width'    : '100%',
-				'height'   : '100%',
-				'z-index'  : '0',
-				'overflow' : 'hidden'
-			});
+			// set wrapper shizzle
+			this.set_wrapper_styles();
 
 			// give some basic styling to elements
 			var elements = members.wrapper.children(members.settings.element);
@@ -152,6 +138,39 @@
 
 		},
 
+		set_wrapper_styles : function() {
+
+			var position = 'absolute';
+
+			// remove element parent and add to body (so always top left)
+		 	if (members.settings.background == true) {
+
+				members.wrapper.prependTo($('body'));
+
+				// make sure body has 100% width and height
+				$('body').css({
+					'width'    : '100%',
+					'height'   : '100%'
+				});
+
+				position = 'fixed';
+
+			}
+
+			// set/override parent styles
+			members.wrapper.css({
+				'position' : position,
+				'display'  : 'block',
+				'top'      : '0px',
+				'left'     : '0px',
+				'width'    : '100%',
+				'height'   : '100%',
+				'z-index'  : '-1',
+				'overflow' : 'hidden'
+			});
+
+		},
+
 		prepare_continue : function() {
 
 			// for each element...
@@ -192,6 +211,8 @@
 			
 		resize_elements : function() {	
 
+			this.set_wrapper_styles();
+
 			// for each element
 			members.wrapper.children(members.settings.element).each(function(i) {
 
@@ -219,6 +240,15 @@
 					'width' : new_width + 'px',
 					'height': new_height + 'px'
 				});
+
+				console.log(members.settings.element);
+
+				if (members.settings.element == 'img' || 'video') {
+					$(this).attr({
+						'width' : new_width,
+						'height': new_height
+					});
+				}
 
 			});
 
@@ -624,10 +654,6 @@
 		    		'duration'    : 1000,
 		    		'orientation' : 'horizontal'
 		    	},
-		    	'offset'       : { // TODO: implement functionality for offsets
-		    		'x' : 0,
-		    		'y' : 0
-		      	},
 		      	'element'      : 'img',
 		      	'background'   : true,
 		      	'ajax'         : null,
