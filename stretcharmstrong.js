@@ -1,6 +1,6 @@
 /*
 	stretcharmstrong: developed by Anthony Armstrong
-		version: 1.1.6
+		version: 1.1.7
 		last modified: 2013-02-22
 */
 
@@ -117,7 +117,7 @@
 						}
 
 						// throw an exception
-						$.error('stretcharmstrong - the onready/onload event you are waiting for took too long.');
+						$.error('stretcharmstrong - the onready/onload event(s) you are waiting for took too long.');
 
 					}
 
@@ -241,8 +241,6 @@
 					'height': new_height + 'px'
 				});
 
-				console.log(members.settings.element);
-
 				if (members.settings.element == 'img' || 'video') {
 					$(this).attr({
 						'width' : new_width,
@@ -256,7 +254,7 @@
 
 		rotate_elements : function() {
 
-			if (members.settings.rotate === true) {
+			if (members.settings.rotate === true && members.element_count > 1) {
 				members.interval = new GlobalTimer(members.settings.interval, [
 					function() {
 						public_methods.next();
@@ -719,76 +717,84 @@
 
 		next : function() {
 
-			// stop the interval if there is one
-			if (members.interval !== false) {
-				members.interval.cancel();
+			if (members.element_count > 1) {
+
+				// stop the interval if there is one
+				if (members.interval !== false) {
+					members.interval.cancel();
+				}
+
+				var new_index = members.current_element + 1;
+
+				// is the next image outside the range?
+				if (new_index > members.element_count - 1) {
+
+					// reset new_index to 0
+					new_index = 0;
+
+				}
+
+				switch(members.settings.transition.type) {
+
+					case 'fade' :
+						// call show method
+						private_methods.show_element(new_index);
+					break;
+
+					case 'slide' :
+						// call slide method
+						private_methods.slide_forward(new_index);
+					break;
+
+					default : $.error('stretcharmstrong - unsupported transition type: ' + members.settings.transition.type);
+				}
+
+
+				// start interval again if applicable
+				private_methods.rotate_elements();
+
 			}
-
-			var new_index = members.current_element + 1;
-
-			// is the next image outside the range?
-			if (new_index > members.element_count - 1) {
-
-				// reset new_index to 0
-				new_index = 0;
-
-			}
-
-			switch(members.settings.transition.type) {
-
-				case 'fade' :
-					// call show method
-					private_methods.show_element(new_index);
-				break;
-
-				case 'slide' :
-					// call slide method
-					private_methods.slide_forward(new_index);
-				break;
-
-				default : $.error('stretcharmstrong - unsupported transition type: ' + members.settings.transition.type);
-			}
-
-
-			// start interval again if applicable
-			private_methods.rotate_elements();
 
 		},
 
 		prev : function() {
 
-			// stop the interval if there is one
-			if (members.interval !== false) {
-				members.interval.cancel();
+			if (members.element_count > 1) {
+
+				// stop the interval if there is one
+				if (members.interval !== false) {
+					members.interval.cancel();
+				}
+
+				var new_index = members.current_element - 1;
+
+				// is the next image outside the range?
+				if (new_index < 0) {
+
+					// reset new_index to 
+					new_index = members.element_count - 1;
+
+				}
+
+				switch(members.settings.transition.type) {
+
+					case 'fade' :
+						// call show method
+						private_methods.show_element(members.current_element);
+					break;
+
+					case 'slide' :
+						// call slide method
+						private_methods.slide_backward(new_index);
+					break;
+
+					default : $.error('stretcharmstrong - unsupported transition type: ' + members.settings.transition.type);
+				}
+
+				// start interval again if applicable
+				private_methods.rotate_elements();
+
 			}
-
-			var new_index = members.current_element - 1;
-
-			// is the next image outside the range?
-			if (new_index < 0) {
-
-				// reset new_index to 
-				new_index = members.element_count - 1;
-
-			}
-
-			switch(members.settings.transition.type) {
-
-				case 'fade' :
-					// call show method
-					private_methods.show_element(members.current_element);
-				break;
-
-				case 'slide' :
-					// call slide method
-					private_methods.slide_backward(new_index);
-				break;
-
-				default : $.error('stretcharmstrong - unsupported transition type: ' + members.settings.transition.type);
-			}
-
-			// start interval again if applicable
-			private_methods.rotate_elements();
 
 			
 			
@@ -796,49 +802,57 @@
 
 		jumpto : function(image_index) {
 
-			// stop the interval if there is one
-			if (members.interval !== false) {
-				members.interval.cancel();
+			if (members.element_count > 1) {
+
+				// stop the interval if there is one
+				if (members.interval !== false) {
+					members.interval.cancel();
+				}
+
+				switch(members.settings.transition.type) {
+
+					case 'fade' :
+						private_methods.show_element(image_index);
+					break;
+
+					case 'slide' :
+						private_methods.fast_forward(image_index);
+					break;
+
+					default : $.error('stretcharmstrong - unsupported transition type: ' + members.settings.transition.type);
+				}
+
+				// start interval again if applicable
+				private_methods.rotate_elements();
+
 			}
-
-			switch(members.settings.transition.type) {
-
-				case 'fade' :
-					private_methods.show_element(image_index);
-				break;
-
-				case 'slide' :
-					private_methods.fast_forward(image_index);
-				break;
-
-				default : $.error('stretcharmstrong - unsupported transition type: ' + members.settings.transition.type);
-			}
-
-			// start interval again if applicable
-			private_methods.rotate_elements();
 
 		},
 
 		pause : function() {
 
-			// stop the interval if there is one
-			if (members.interval !== false) {
-				members.interval.cancel();
-			}
+			if (members.element_count > 1) {
 
-			// only call callbacks if we need to
-			if (members.transition_state == 'resumed') {
-
-				// set transition state
-				members.transition_state = 'paused';
-
-				// call rotate state change callback
-				if (members.settings.rotate_changed != null) {
-					members.settings.rotate_changed.call(undefined, {
-						'rotate' : 'paused',
-						'count'  : members.master_count
-					});
+				// stop the interval if there is one
+				if (members.interval !== false) {
+					members.interval.cancel();
 				}
+
+				// only call callbacks if we need to
+				if (members.transition_state == 'resumed') {
+
+					// set transition state
+					members.transition_state = 'paused';
+
+					// call rotate state change callback
+					if (members.settings.rotate_changed != null) {
+						members.settings.rotate_changed.call(undefined, {
+							'rotate' : 'paused',
+							'count'  : members.master_count
+						});
+					}
+				}
+
 			}
 		},
 
