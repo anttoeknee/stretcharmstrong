@@ -1,6 +1,6 @@
 /*
 	stretcharmstrong: developed by Anthony Armstrong
-		version: 1.2.0
+		version: 1.2.2
 		last modified: 2013-02-28
 */
 
@@ -85,8 +85,8 @@
 		    	// set wrapper member
 		    	element_handle = this;
 
-		    	// is it the document?
-		    	if (element_handle[0].nodeName == '#document') {
+		    	// no elements in wrapper, try ajax or array init...
+		    	if (element_handle.children().size() <= 0) {
 
 		    		// is the ajax path set?
 		    		if (settings.ajax != null) {
@@ -110,7 +110,7 @@
 		    		}
 
 		    		if (settings.images == null && settings.ajax == null) {
-		    			$.error('stretcharmstrong - you must pass in an array of images or an ajax path when attaching to the document');
+		    			$.error('stretcharmstrong - you must pass in an array of images or an ajax path if not using elements \'inline\'');
 		    		} 
 
 		    		// call inject method
@@ -308,7 +308,7 @@
 			});
 
 			// fade in first element
-			self.show_element(0, element_handle);
+			self.show_element(0, element_handle, 'forward');
 
 			// set 'initialized'
 			settings.initialized = true;
@@ -351,7 +351,7 @@
 				var mod = element_handle.width() % scaled_width;
 
 				// because the formula only has the parent as a max, we need to add on the difference between the parent and the scaled width (if there is one)
-				new_width = (mod != element_handle.width()) ? (scaled_width % element_handle.width()) + (element_handle.width() - scaled_width) : scaled_width
+				new_width = (mod != element_handle.width()) ? (scaled_width % element_handle.width()) + (element_handle.width() - scaled_width) : scaled_width;
 
 				var calc_height  = parseInt(settings.image_attr[i].height / settings.image_attr[i].width * new_width);
 				var scaled_height = calc_height > new_height ? calc_height : new_height;
@@ -644,7 +644,7 @@
 
 		},
 
-		show_element : function(image_index, element_handle) {
+		show_element : function(image_index, element_handle, direction) {
 
 			var settings = element_handle.data('settings');
 
@@ -667,6 +667,7 @@
 								settings.transition_complete.call($(images[image_index]), {
 			  						'transition' : 'fade',
 			  						'index'      : image_index,
+			  						'direction'  : direction,
 			  						'count'      : settings.master_count
 			  					});
 							}
@@ -676,6 +677,7 @@
 							settings.transition_complete.call($(images[image_index]), {
 		  						'transition' : 'fade',
 		  						'index'      : image_index,
+		  						'direction'  : direction,
 		  						'count'      : settings.master_count
 		  					}); 
 
@@ -769,14 +771,6 @@
 
 			var settings = element_handle.data('settings');
 
-			// if there is no wrapper
-			if (!settings.initialized) {
-
-				// build wrapping element
-				element_handle = $('<div id="stretcharmstrong"></div>');
-
-			}
-
 			// clear wrapper of all elements
 			element_handle.empty();
 
@@ -826,7 +820,7 @@
 
 					case 'fade' :
 						// call show method
-						private_methods.show_element(new_index, $(this));
+						private_methods.show_element(new_index, $(this), 'forward');
 					break;
 
 					case 'slide' :
@@ -874,7 +868,7 @@
 
 					case 'fade' :
 						// call show method
-						private_methods.show_element(new_index, $(this));
+						private_methods.show_element(new_index, $(this), 'backward');
 					break;
 
 					case 'slide' :
@@ -908,7 +902,7 @@
 				switch(settings.transition.type) {
 
 					case 'fade' :
-						private_methods.show_element(image_index, $(this));
+						private_methods.show_element(image_index, $(this), undefined);
 					break;
 
 					case 'slide' :
