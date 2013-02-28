@@ -42,7 +42,7 @@ Usage (Pre-rendered HTML)
     },                                                         
     'element'     : 'img',                             
     'background'  : true,
-    'ignore_first : false,
+    'ignore_first' : false,
     transition_complete : function(event) {},                                                                   
     cycle_complete : function() {},
     rotate_changed : function(event) {}    
