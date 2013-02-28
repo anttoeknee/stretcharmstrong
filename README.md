@@ -1,4 +1,4 @@
-stretcharmstrong (v1.1.6)
+stretcharmstrong (v1.2.0)
 =========================
 
 jQuery Plugin for HTML Background Resizing and Slide Show
@@ -18,6 +18,7 @@ Features
 - Built-in methods for slide show controls
 - Can be used with rendered elements, image paths or AJAX requests
 - Cross browser compatible (tested on Chrome, Firefox, IE7-10)
+- Can be used on a page as many times as needed
 
 Usage (Pre-rendered HTML)
 -------------------------
@@ -33,7 +34,7 @@ Usage (Pre-rendered HTML)
 <pre>
   $('div#wrapping-element').stretcharmstrong({
     'rotate'      : false,                             
-    'interval'    : 5000,                              
+    'rotate_interval'    : 5000,                              
     'transition' : {
       'type'        : 'slide',
       'duration'    : 1500,
@@ -78,7 +79,7 @@ Options
 -----------------------
 
   - **rotate**       : *bool*   | rotate elements? 
-  - **interval**     : *int*    | the rotate interval in miliseconds 
+  - **rotate_interval** : *int*    | the rotate interval in miliseconds 
   - **transition**
   - - - **type**        : *string* | the transition type for the rotate (currently 'fade' or 'slide') (v1.1.4)
   - - - **duration**    : *int*    | the transition duration in miliseconds (v1.1.4)
@@ -110,6 +111,11 @@ Callbacks
 **rotate_changed** : fires when the rotation interval has been stopped or started passing event data as follows;- 
   - *rotate* : 'resumed' or 'paused' 
   - *count*  : the total count of all transitions (v1.1.6)
+
+**on_resize** : fires when elements are resized passing data in as follows;-
+  - *dimensions* : contains the width and height of the resized elements
+
+  - the *this* keyword is a reference to the currently displayed element 
 
 Methods
 -----------------------
