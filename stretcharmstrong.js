@@ -1,7 +1,7 @@
 /*
 	stretcharmstrong: developed by Anthony Armstrong
-		version: 1.1.7
-		last modified: 2013-02-22
+		version: 1.2.0
+		last modified: 2013-02-28
 */
 
 (function($) {
@@ -19,7 +19,7 @@
 		} else if (typeof method === 'object' || !method) {
 
 			// call the init method
-			return public_methods.init.apply(this, arguments);
+			return private_methods.init.apply(this, arguments);
 
 		} else {
 
@@ -29,32 +29,116 @@
 
 	};
 
-	var members = {
-		settings         : null,
-		image_attr       : {},
-		wrapper          : null,
-		current_element  : 0,
-		element_count    : 0,
-		master_count     : 0,
-		interval         : false,
-		images_array     : null,
-		initialized      : false,
-		transition_state : 'paused',
-		onloads_triggered : 0
-	};
-
 	var private_methods = {
 
-		prepare_elements : function() {
+		init : function(options) {
+
+			// private defaults
+			var members = {
+				'image_attr'       : {},
+				'wrapper'         : null,
+				'current_element'  : 0,
+				'element_count'    : 0,
+				'master_count'     : 0,
+				'interval'         : false,
+				'images_array'     : null,
+				'initialized'      : false,
+				'transition_state' : 'paused',
+				'onloads_triggered' : 0
+			};
+			
+			// create some defaults, extending them with any options that were provided
+		    var settings = $.extend(true, {}, { // use empty json as second object to preserve data ofr each instantiation...
+		    	'rotate'       : false,
+		    	'rotate_interval' : 1000,
+		    	'transition'   : {
+		    		'type'        : 'fade',
+		    		'duration'    : 1000,
+		    		'orientation' : 'horizontal'
+		    	},
+		      	'element'      : 'img',
+		      	'background'   : true,
+		      	'ajax'         : null,
+		      	'images'       : null,
+		      	'resize'       : true,
+		      	'ignore_first' : false,
+		      	'custom_onloads': {
+		      		'count' : 0,
+		      		'timeout' : 10
+		      	},
+		      	'loading_element' : null,
+		      	transition_complete : function(event) {},
+		      	cycle_complete : function(event) {},
+		      	rotate_changed : function(event) {},
+		      	on_resize : function(event) {},
+		    }, options, members); // combine members into settings so we can use them for each instance
+
+		    // store settings in data object so we can have mulitple instances...
+		    $(this).data('settings', settings);
+
+		    // re-set settings
+		    settings = $(this).data('settings');
+
+		    // determine sender
+		    if (typeof this[0] === 'object') {
+
+		    	// set wrapper member
+		    	element_handle = this;
+
+		    	// is it the document?
+		    	if (element_handle[0].nodeName == '#document') {
+
+		    		// is the ajax path set?
+		    		if (settings.ajax != null) {
+
+		    			// make the request...
+		    			private_methods.ajax_request(element_handle);
+
+		    		}
+
+		    		// if images have been passed in 
+		    		if (settings.images != null) {
+
+		    			// are they an array?
+		    			if (!$.isArray(settings.images)) {
+		    				$.error('stretcharmstrong - the data passed as images is not an array.');
+		    			}
+
+		    			// set images_array
+		    			settings.images_array = settings.images;
+
+		    		}
+
+		    		if (settings.images == null && settings.ajax == null) {
+		    			$.error('stretcharmstrong - you must pass in an array of images or an ajax path when attaching to the document');
+		    		} 
+
+		    		// call inject method
+		    		private_methods.inject_to_dom(element_handle);
+
+
+		    	} 
+
+		    	// prepare elements...
+	    		private_methods.prepare_elements(this);
+
+		    }
+  
+		},
+
+		prepare_elements : function(element_handle) {
+
+			var settings = element_handle.data('settings');
+			var self = this;
 
 			// set wrapper shizzle
-			this.set_wrapper_styles();
+			this.set_wrapper_styles(element_handle);
 
 			// give some basic styling to elements
-			var elements = members.wrapper.children(members.settings.element);
+			var elements = element_handle.children(settings.element);
 			var reversed_elements = elements.toArray().reverse();
 			$(reversed_elements).each(function(i) {
-				var z_index = members.settings.transition.type == 'fade' ? i : 1;
+				var z_index = settings.transition.type == 'fade' ? i : 1;
 				$(this).css({
 					'position' : 'absolute',
 					'display'  : 'none',
@@ -75,10 +159,10 @@
 
 			});
 
-			var loading_overlay = $(members.settings.loading_element);
+			var loading_overlay = $(settings.loading_element);
 
 			// optionally wait for custom onload
-			if (members.settings.custom_onloads.count > 0) {
+			if (settings.custom_onloads.count > 0) {
 
 				var count = 0;
 
@@ -88,7 +172,7 @@
 					count++;
 
 					// check onloads
-					if (members.onloads_triggered >= members.settings.custom_onloads.count) {
+					if (settings.onloads_triggered >= settings.custom_onloads.count) {
 
 					  	// some onloads fire more than once... TODO: integrate propper api on loads...
 
@@ -102,12 +186,12 @@
 						clearInterval(onload_timeout);
 
 						// carry on...
-						private_methods.prepare_continue();
+						this.prepare_continue(element_handle);
 
 					}
 
 					// time up has the the custom onload been triggerd?
-					if (count == members.settings.custom_onloads.timeout && members.onloads_triggered < members.settings.custom_onloads.count) {
+					if (count == settings.custom_onloads.timeout && settings.onloads_triggered < settings.custom_onloads.count) {
 
 						// has a loading element been supplied?
 						if (loading_overlay.size() > 0) {
@@ -125,96 +209,134 @@
 
 			} else {
 
-				// has a loading element been supplied?
-				if (loading_overlay.size() > 0) {
+				// wait for images etc...
+				$(window).bind('load.stretcharmstrong', function() {
 
-					// hide it...
-					loading_overlay.fadeOut(300);
-				}
+					// can we find an iframe?
+					if (element_handle.find('iframe').size() > 0) {
 
-				private_methods.prepare_continue();
+						// how many?
+						var iframe_count = element_handle.find('iframe').size();
+						var iframe_load_count = 0;
 
-			}
+						$('iframe').bind('load.stretcharmstrong', function() {
 
-		},
+							iframe_load_count++;
 
-		set_wrapper_styles : function() {
+							if (iframe_load_count == iframe_count) {
 
-			var position = 'absolute';
+								// has a loading element been supplied?
+								if (loading_overlay.size() > 0) {
 
-			// remove element parent and add to body (so always top left)
-		 	if (members.settings.background == true) {
+									// hide it...
+									loading_overlay.fadeOut(300);
+								}
 
-				members.wrapper.prependTo($('body'));
+								self.prepare_continue(element_handle);
 
-				// make sure body has 100% width and height
-				$('body').css({
-					'width'    : '100%',
-					'height'   : '100%'
+							}
+
+						});
+
+					} else {
+
+						// has a loading element been supplied?
+						if (loading_overlay.size() > 0) {
+
+							// hide it...
+							loading_overlay.fadeOut(300);
+						}
+
+						self.prepare_continue(element_handle);
+
+					}
+
 				});
 
-				position = 'fixed';
-
 			}
-
-			// set/override parent styles
-			members.wrapper.css({
-				'position' : position,
-				'display'  : 'block',
-				'top'      : '0px',
-				'left'     : '0px',
-				'width'    : '100%',
-				'height'   : '100%',
-				'z-index'  : '-1',
-				'overflow' : 'hidden'
-			});
 
 		},
 
-		prepare_continue : function() {
+		set_wrapper_styles : function(element_handle) {
+
+			var settings = element_handle.data('settings');
+
+			// remove element parent and add to body (so always top left)
+		 	if (settings.background == true) {
+
+		 		// make sure body has 100% width and height
+		 		$('html, body').css({
+		 			'width' : '100%',
+		 			'height': '100%'
+		 		});
+
+				element_handle.prependTo($('body'));
+
+				// set/override parent styles
+				element_handle.css({
+					'position' : 'fixed',
+					'display'  : 'block',
+					'top'      : '0px',
+					'left'     : '0px',
+					'width'    : '100%',
+					'height'   : '100%',
+					'z-index'  : '-1',
+					'overflow' : 'hidden'
+				});
+
+			}			
+
+		},
+
+		prepare_continue : function(element_handle) {
+
+			var settings = element_handle.data('settings');
+			var self = this;
 
 			// for each element...
-			members.wrapper.children(members.settings.element).each(function(i) {
+			element_handle.children(settings.element).each(function(i) {
 
 				// store original width and height
-				members.image_attr[i] = {
+				settings.image_attr[i] = {
 					'width'  : $(this).width(),
 					'height' : $(this).height()
 				};
 
 				// update element count
-				members.element_count++;
+				settings.element_count++;
 
 			});
 
 			// fade in first element
-			private_methods.show_element(0);
+			self.show_element(0, element_handle);
 
 			// set 'initialized'
-			members.initialized = true;
+			settings.initialized = true;
 			
-			if (members.settings.resize == true) {
+			if (settings.resize == true) {
 
-				private_methods.resize_elements();
+				self.resize_elements(element_handle);
 
 				// bind resize event to window
 		    	$(window).bind('resize.stretcharmstrong', function() {
-		    		private_methods.resize_elements();
+		    		self.resize_elements(element_handle);
 		    	});
 
 			}
 
 			// start interval if applicable
-			private_methods.rotate_elements();
+			self.rotate_elements(element_handle);
 
 		},
 			
-		resize_elements : function() {	
+		resize_elements : function(element_handle) {	
 
-			this.set_wrapper_styles();
+			var settings = element_handle.data('settings');
+
+			this.set_wrapper_styles(element_handle);
 
 			// for each element
-			members.wrapper.children(members.settings.element).each(function(i) {
+			element_handle.children(settings.element).each(function(i) {
 
 				/*
 					calculate the new width and height for the element whilst maintaing aspect ratio
@@ -223,15 +345,15 @@
 				var new_height = 0;
 				var new_width  = 0;
 
-				var calc_width = parseInt(members.image_attr[i].width / members.image_attr[i].height * members.wrapper.height());
+				var calc_width = parseInt(settings.image_attr[i].width / settings.image_attr[i].height * element_handle.height());
 				var scaled_width = calc_width > new_width ? calc_width : new_width;
 
-				var mod = members.wrapper.width() % scaled_width;
+				var mod = element_handle.width() % scaled_width;
 
 				// because the formula only has the parent as a max, we need to add on the difference between the parent and the scaled width (if there is one)
-				new_width = (mod != members.wrapper.width()) ? (scaled_width % members.wrapper.width()) + (members.wrapper.width() - scaled_width) : scaled_width
+				new_width = (mod != element_handle.width()) ? (scaled_width % element_handle.width()) + (element_handle.width() - scaled_width) : scaled_width
 
-				var calc_height  = parseInt(members.image_attr[i].height / members.image_attr[i].width * new_width);
+				var calc_height  = parseInt(settings.image_attr[i].height / settings.image_attr[i].width * new_width);
 				var scaled_height = calc_height > new_height ? calc_height : new_height;
 
 				new_height = scaled_height;
@@ -241,37 +363,53 @@
 					'height': new_height + 'px'
 				});
 
-				if (members.settings.element == 'img' || 'video') {
+				if (settings.element == 'img' || 'video') {
 					$(this).attr({
 						'width' : new_width,
 						'height': new_height
 					});
 				}
 
+				if (i == element_handle.children(settings.element).size() - 1) {
+
+					// call on resize callback
+					if (settings.on_resize != null) {
+						settings.on_resize.call(element_handle.find('[data-slide="current"]'), {
+							'dimensions' : {
+								'width' : new_width,
+								'height': new_height
+							}
+						});
+					}
+				}
+
 			});
 
+			
 		},
 
-		rotate_elements : function() {
+		rotate_elements : function(element_handle) {
 
-			if (members.settings.rotate === true && members.element_count > 1) {
-				members.interval = new GlobalTimer(members.settings.interval, [
+			var settings = element_handle.data('settings');
+
+			if (settings.rotate === true && settings.element_count > 1) {
+				settings.interval = new GlobalTimer(settings.rotate_interval, [
 					function() {
-						public_methods.next();
+						element_handle.stretcharmstrong('next');
 					}
 				]);
 
 				// only call callbacks if we need to
-				if (members.transition_state == 'paused') {
+				if (settings.transition_state == 'paused') {
 
 					// set transition state
-					members.transition_state = 'resumed';
+					settings.transition_state = 'resumed';
 
 					// call rotate changed callback
-					if (members.settings.rotate_changed != null) {
-						members.settings.rotate_changed.call(undefined, {
+					if (settings.rotate_changed != null) {
+						settings.rotate_changed.call(undefined, {
 							'rotate' : 'resumed',
-							'count'  : members.master_count
+							'count'  : settings.master_count
 						});
 					}
 				}
@@ -282,16 +420,18 @@
 			
 		},
 
-		get_default_position : function() {
+		get_default_position : function(element_handle) {
+
+			var settings = element_handle.data('settings');
 
 			var el_css = {};
 
-			if (members.settings.transition.orientation == 'horizontal') {
+			if (settings.transition.orientation == 'horizontal') {
 				el_css.left = -99999;
 				el_css.top  = 0; 
 			}
 
-			if (members.settings.transition.orientation == 'vertical') {
+			if (settings.transition.orientation == 'vertical') {
 				el_css.left = 0;
 				el_css.top  = -99999; 
 			}
@@ -300,16 +440,18 @@
 
 		},
 
-		element_slide_complete : function(current_image, new_image, new_index, transition_direction) {
+		element_slide_complete : function(current_image, new_image, new_index, transition_direction, element_handle) {
 
-			var pos = this.get_default_position();
-			var css_pos = members.settings.transition.orientation == 'horizontal' ? 'left' : 'top';
+			var settings = element_handle.data('settings');
+
+			var pos = this.get_default_position(element_handle);
+			var css_pos = settings.transition.orientation == 'horizontal' ? 'left' : 'top';
 
 			// update data-slide
 			new_image.attr('data-slide', 'current');
 
 			// reset left and top
-			members.wrapper.children(members.settings.element).not(new_image).css({
+			element_handle.children(settings.element).not(new_image).css({
 				'left'    : pos.left,
 				'top'     : pos.top
 			});
@@ -320,55 +462,57 @@
 			new_index = parseInt(new_index);
 
 			// call transition complete callback
-			if (members.settings.transition_complete != null) {
+			if (settings.transition_complete != null) {
 
 				// optionally ignore transition callback for first transition...
-				if (members.settings.ignore_first) {
-					members.settings.ignore_first = false; // reset
+				if (settings.ignore_first) {
+					settings.ignore_first = false; // reset
 
-					if (members.master_count > 1) {
-						members.settings.transition_complete.call(new_image, {
+					if (settings.master_count > 1) {
+						settings.transition_complete.call(new_image, {
 	  						'transition' : 'slide',
 	  						'direction'  : transition_direction,
 	  						'index'      : new_index,
-	  						'count'      : members.master_count
+	  						'count'      : settings.master_count
 	  					});
 					}
 
 				} else {
 
-					members.settings.transition_complete.call(new_image, {
+					settings.transition_complete.call(new_image, {
   						'transition' : 'slide',
   						'direction'  : transition_direction,
   						'index'      : new_index,
-  						'count'      : members.master_count
+  						'count'      : settings.master_count
   					});
 
 				}
 
 				// check what image we're on for cycle complete callback
-				private_methods.image_indexer(new_index, true);
+				private_methods.image_indexer(new_index, true, element_handle);
 	
 			}
 
 			
 		},
 
-		slide_forward : function(new_index) {
+		slide_forward : function(new_index, element_handle) {
+
+			var settings = element_handle.data('settings');
 
 			var self = this;
 
 			// get current width and height of images
-			var images = members.wrapper.children(members.settings.element);
+			var images = element_handle.children(settings.element);
 			var image_width = images.width();
 			var image_height = images.height();
 
-			var current_image = members.wrapper.find('[data-slide="current"]');
-			var next_image = members.wrapper.find('[data-index="' + new_index + '"]');
+			var current_image = element_handle.find('[data-slide="current"]');
+			var next_image = element_handle.find('[data-index="' + new_index + '"]');
 
 			if (!current_image.is(':animated') && !next_image.is(':animated')) {
 
-				if (members.settings.transition.orientation == 'horizontal') {
+				if (settings.transition.orientation == 'horizontal') {
 
 					// get next image and place it right of the current
 					next_image.css({
@@ -379,22 +523,23 @@
 					// animate
 					current_image.stop(false, true).animate({
 						'left' : '-=' + image_width + 'px'
-					}, members.settings.transition.duration);
+					}, settings.transition.duration);
 
 					next_image.stop(false, true).animate({
 						'left' : '-=' + image_width + 'px'
-					}, members.settings.transition.duration, function() { 
+					}, settings.transition.duration, function() { 
 						self.element_slide_complete(
 							current_image, 
 							next_image, 
 							new_index, 
-							'forward'
+							'forward',
+							element_handle
 						);
 					});
 
 				}
 
-				if (members.settings.transition.orientation == 'vertical') {
+				if (settings.transition.orientation == 'vertical') {
 					
 					// get next image and place it at the bottom of the current
 					next_image.css({
@@ -405,16 +550,17 @@
 					// animate
 					current_image.stop(false, true).animate({
 						'top' : '-=' + image_height + 'px'
-					}, members.settings.transition.duration);
+					}, settings.transition.duration);
 
 					next_image.stop(false, true).animate({
 						'top' : '-=' + image_height + 'px'
-					}, members.settings.transition.duration, function() { 
+					}, settings.transition.duration, function() { 
 						self.element_slide_complete(
 							current_image, 
 							next_image, 
 							new_index, 
-							'forward'
+							'forward',
+							element_handle
 						);
 					});
 
@@ -424,22 +570,24 @@
 
 		},
 
-		slide_backward : function(new_index) {
+		slide_backward : function(new_index, element_handle) {
+
+			var settings = element_handle.data('settings');
 
 			var self = this;
 
 			// get current width of images
-			var images = members.wrapper.children(members.settings.element);
+			var images = element_handle.children(settings.element);
 			var image_width = images.width();
 			var image_height = images.height();
 
 			
-			var current_image = members.wrapper.find('[data-slide="current"]');
-			var prev_image = parseInt(current_image.data('index')) == 0 ? members.wrapper.find('[data-index="' + (members.element_count - 1) + '"]') : current_image.prev();
+			var current_image = element_handle.find('[data-slide="current"]');
+			var prev_image = element_handle.find('[data-index="' + new_index + '"]');
 
 			if (!current_image.is(':animated') && !prev_image.is(':animated')) {
 
-				if (members.settings.transition.orientation == 'horizontal') {
+				if (settings.transition.orientation == 'horizontal') {
 
 					// get next image and place it left of the current
 					prev_image.css({
@@ -450,22 +598,23 @@
 					// animate
 					current_image.stop(false, true).animate({
 						'left' : '+=' + image_width + 'px'
-					}, members.settings.transition.duration);
+					}, settings.transition.duration);
 
 					prev_image.stop(false, true).animate({
 						'left' : '+=' + image_width + 'px'
-					}, members.settings.transition.duration, function() {
+					}, settings.transition.duration, function() {
 						self.element_slide_complete(
 							current_image, 
 							prev_image, 
 							new_index, 
-							'backward'
+							'backward',
+							element_handle
 						);
 					});
 
 				}
 
-				if (members.settings.transition.orientation == 'vertical') {
+				if (settings.transition.orientation == 'vertical') {
 					
 					prev_image.css({
 						'top' : -image_height + 'px',
@@ -475,16 +624,17 @@
 					// animate
 					current_image.stop(false, true).animate({
 						'top' : '+=' + image_height + 'px'
-					}, members.settings.transition.duration);
+					}, settings.transition.duration);
 
 					prev_image.stop(false, true).animate({
 						'top' : '+=' + image_height + 'px'
-					}, members.settings.transition.duration, function() {
+					}, settings.transition.duration, function() {
 						self.element_slide_complete(
 							current_image, 
 							prev_image, 
 							new_index, 
-							'backward'
+							'backward',
+							element_handle
 						);
 					});
 
@@ -494,47 +644,39 @@
 
 		},
 
-		show_element : function(image_index) {
+		show_element : function(image_index, element_handle) {
+
+			var settings = element_handle.data('settings');
 
 			// get handle on images
-			var images = members.wrapper.children(members.settings.element);
+			var images = element_handle.children(settings.element);
 
 			if (!$(images).is(':animated')) {
 
-				// is the next image outside the range?
-				if (image_index > members.element_count - 1) {
-
-					// reset new_index to 0
-					image_index = 0;
-
-				}
-
-				image_index = parseInt(image_index);
-
 				// fade in selected image
-				$(images[image_index]).fadeIn(members.settings.transition.duration - 200, function() {
+				$(images[image_index]).fadeIn(settings.transition.duration - 200, function() {
 
 					// call transition complete callback
-					if (members.settings.transition_complete != null) {
+					if (settings.transition_complete != null) {
 
 						// optionally ignore transition callback for first transition...
-						if (members.settings.ignore_first) {
-							members.settings.ignore_first = false; // reset
+						if (settings.ignore_first) {
+							settings.ignore_first = false; // reset
 
-							if (members.master_count > 1) {
-								members.settings.transition_complete.call($(images[image_index]), {
+							if (settings.master_count > 1) {
+								settings.transition_complete.call($(images[image_index]), {
 			  						'transition' : 'fade',
 			  						'index'      : image_index,
-			  						'count'      : members.master_count
+			  						'count'      : settings.master_count
 			  					});
 							}
 
 						} else {
 
-							members.settings.transition_complete.call($(images[image_index]), {
+							settings.transition_complete.call($(images[image_index]), {
 		  						'transition' : 'fade',
 		  						'index'      : image_index,
-		  						'count'      : members.master_count
+		  						'count'      : settings.master_count
 		  					}); 
 
 						}
@@ -552,56 +694,68 @@
 					}
 
 					// fade out this image
-					$(images[i]).fadeOut(members.settings.transition.duration);
+					$(images[i]).fadeOut(settings.transition.duration);
+
+					// update data-slide
+					$(images[i]).removeAttr('data-slide');
 
 				});
 
+				// update data-slide
+				$(images[image_index]).attr('data-slide', 'current');
+
 				// check what image we're on for cycle complete callback
-				private_methods.image_indexer(image_index, true);
+				private_methods.image_indexer(image_index, true, element_handle);
 
 			}
 
 		},
 
-		fast_forward : function(image_index) {
+		fast_forward : function(image_index, element_handle) {
+
+			var settings = element_handle.data('settings');
 
 			// get current element 
-			var current_image = $(members.wrapper).find(members.settings.element + '[data-slide="current"]');
+			var current_image = $(element_handle).find(settings.element + '[data-slide="current"]');
 
 			// dont do anything if we're already on the slide we have clicked
 			if (parseInt(current_image.data('index')) != image_index) {
 
 				// everything in place, call slide left...
-				private_methods.slide_forward(image_index);
+				private_methods.slide_forward(image_index, element_handle);
 
 			}
 	
 		},
 
-		image_indexer : function(index, fire) {
+		image_indexer : function(index, fire, element_handle) {
+
+			var settings = element_handle.data('settings');
 
 			if (fire) {
-				if (members.current_element == members.element_count - 1) {
-					if (members.settings.cycle_complete != null) {
-						members.settings.cycle_complete.call(undefined);
+				if (settings.current_element == settings.element_count - 1) {
+					if (settings.cycle_complete != null) {
+						settings.cycle_complete.call(undefined);
 					}
 				}
 			}
 
-			members.master_count++;
-			members.current_element = index;
+			settings.master_count++;
+			settings.current_element = index;
 
 		},
 
-		ajax_request : function() {
+		ajax_request : function(element_handle) {
+
+			var settings = element_handle.data('settings');
 
 			$.ajax({
-				url: members.settings.ajax,
+				url: settings.ajax,
 				async : false,
 		  		success: function(data) {
-			  		// members.image_json must result in an array of image paths...
-			    	members.images_array = data.images;
-			    	if (!$.isArray(members.images_array)) {
+			  		// settings.image_json must result in an array of image paths...
+			    	settings.images_array = data.images;
+			    	if (!$.isArray(settings.images_array)) {
 			    		$.error('stretcharmstrong - the data returned from the server was not an array.');
 			    	}
 			  	},
@@ -611,26 +765,28 @@
 			});
 		},
 
-		inject_to_dom : function() {
+		inject_to_dom : function(element_handle) {
+
+			var settings = element_handle.data('settings');
 
 			// if there is no wrapper
-			if (!members.initialized) {
+			if (!settings.initialized) {
 
 				// build wrapping element
-				members.wrapper = $('<div id="stretcharmstrong"></div>');
+				element_handle = $('<div id="stretcharmstrong"></div>');
 
 			}
 
 			// clear wrapper of all elements
-			members.wrapper.empty();
+			element_handle.empty();
 
 			// append new images
-			for (var i = 0; i < members.images_array.length; i++) {
+			for (var i = 0; i < settings.images_array.length; i++) {
 
 				// build image...
-				var image = $('<img src="' + members.images_array[i] + '" alt="Image ' + i + '" />');
+				var image = $('<img src="' + settings.images_array[i] + '" alt="Image ' + i + '" />');
 
-				members.wrapper.append(image);
+				element_handle.append(image);
 
 			}
 
@@ -641,117 +797,49 @@
 
 	var public_methods = {
 
-		init : function(options) {
-			
-			// create some defaults, extending them with any options that were provided
-		    members.settings = $.extend({
-		    	'rotate'       : false,
-		    	'interval'     : 1000,
-		    	'transition'   : {
-		    		'type'        : 'fade',
-		    		'duration'    : 1000,
-		    		'orientation' : 'horizontal'
-		    	},
-		      	'element'      : 'img',
-		      	'background'   : true,
-		      	'ajax'         : null,
-		      	'images'       : null,
-		      	'resize'       : true,
-		      	'ignore_first' : false,
-		      	'custom_onloads': {
-		      		'count' : 0,
-		      		'timeout' : 10
-		      	},
-		      	'loading_element' : null,
-		      	transition_complete : function(event) {},
-		      	cycle_complete : function(event) {},
-		      	rotate_changed : function(event) {}
-		    }, options);
-
-		    // determine sender
-		    if (typeof this[0] === 'object') {
-
-		    	// set wrapper member
-		    	members.wrapper = this;
-
-		    	// is it the document?
-		    	if (members.wrapper[0].nodeName == '#document') {
-
-		    		// is the ajax path set?
-		    		if (members.settings.ajax != null) {
-
-		    			// make the request...
-		    			private_methods.ajax_request();
-
-		    		}
-
-		    		// if images have been passed in 
-		    		if (members.settings.images != null) {
-
-		    			// are they an array?
-		    			if (!$.isArray(members.settings.images)) {
-		    				$.error('stretcharmstrong - the data passed as images is not an array.');
-		    			}
-
-		    			// set images_array
-		    			members.images_array = members.settings.images;
-
-		    		}
-
-		    		if (members.settings.images == null && members.settings.ajax == null) {
-		    			$.error('stretcharmstrong - you must pass in an array of images or an ajax path when attaching to the document');
-		    		} 
-
-		    		// call inject method
-		    		private_methods.inject_to_dom();
-
-
-		    	} 
-
-		    	// prepare elements...
-	    		private_methods.prepare_elements();
-
-		    }
-		    
-		},
-
 		next : function() {
 
-			if (members.element_count > 1) {
+			var settings = $(this).data('settings');
+
+			var element_count = $(this).children().size();
+			var current_element = $(this).find(settings.element + '[data-slide="current"]');
+			var current_index = parseInt(current_element.attr('data-index'));
+
+			if (element_count > 1) {
 
 				// stop the interval if there is one
-				if (members.interval !== false) {
-					members.interval.cancel();
+				if (settings.interval !== false) {
+					settings.interval.cancel();
 				}
 
-				var new_index = members.current_element + 1;
+				var new_index = current_index + 1;
 
 				// is the next image outside the range?
-				if (new_index > members.element_count - 1) {
+				if (new_index > element_count - 1) {
 
 					// reset new_index to 0
 					new_index = 0;
 
 				}
 
-				switch(members.settings.transition.type) {
+				switch(settings.transition.type) {
 
 					case 'fade' :
 						// call show method
-						private_methods.show_element(new_index);
+						private_methods.show_element(new_index, $(this));
 					break;
 
 					case 'slide' :
 						// call slide method
-						private_methods.slide_forward(new_index);
+						private_methods.slide_forward(new_index, $(this));
 					break;
 
-					default : $.error('stretcharmstrong - unsupported transition type: ' + members.settings.transition.type);
+					default : $.error('stretcharmstrong - unsupported transition type: ' + settings.transition.type);
 				}
 
 
 				// start interval again if applicable
-				private_methods.rotate_elements();
+				private_methods.rotate_elements($(this));
 
 			}
 
@@ -759,40 +847,46 @@
 
 		prev : function() {
 
-			if (members.element_count > 1) {
+			var settings = $(this).data('settings');
+
+			var element_count = $(this).children().size();
+			var current_element = $(this).find(settings.element + '[data-slide="current"]');
+			var current_index = parseInt(current_element.attr('data-index'));
+
+			if (element_count > 1) {
 
 				// stop the interval if there is one
-				if (members.interval !== false) {
-					members.interval.cancel();
+				if (settings.interval !== false) {
+					settings.interval.cancel();
 				}
 
-				var new_index = members.current_element - 1;
+				var new_index = current_index - 1;
 
 				// is the next image outside the range?
 				if (new_index < 0) {
 
 					// reset new_index to 
-					new_index = members.element_count - 1;
+					new_index = element_count - 1;
 
 				}
 
-				switch(members.settings.transition.type) {
+				switch(settings.transition.type) {
 
 					case 'fade' :
 						// call show method
-						private_methods.show_element(members.current_element);
+						private_methods.show_element(new_index, $(this));
 					break;
 
 					case 'slide' :
 						// call slide method
-						private_methods.slide_backward(new_index);
+						private_methods.slide_backward(new_index, $(this));
 					break;
 
-					default : $.error('stretcharmstrong - unsupported transition type: ' + members.settings.transition.type);
+					default : $.error('stretcharmstrong - unsupported transition type: ' + settings.transition.type);
 				}
 
 				// start interval again if applicable
-				private_methods.rotate_elements();
+				private_methods.rotate_elements($(this));
 
 			}
 
@@ -802,28 +896,30 @@
 
 		jumpto : function(image_index) {
 
-			if (members.element_count > 1) {
+			var settings = $(this).data('settings');
+
+			if (settings.element_count > 1) {
 
 				// stop the interval if there is one
-				if (members.interval !== false) {
-					members.interval.cancel();
+				if (settings.interval !== false) {
+					settings.interval.cancel();
 				}
 
-				switch(members.settings.transition.type) {
+				switch(settings.transition.type) {
 
 					case 'fade' :
-						private_methods.show_element(image_index);
+						private_methods.show_element(image_index, $(this));
 					break;
 
 					case 'slide' :
-						private_methods.fast_forward(image_index);
+						private_methods.fast_forward(image_index, $(this));
 					break;
 
-					default : $.error('stretcharmstrong - unsupported transition type: ' + members.settings.transition.type);
+					default : $.error('stretcharmstrong - unsupported transition type: ' + settings.transition.type);
 				}
 
 				// start interval again if applicable
-				private_methods.rotate_elements();
+				private_methods.rotate_elements($(this));
 
 			}
 
@@ -831,24 +927,26 @@
 
 		pause : function() {
 
-			if (members.element_count > 1) {
+			var settings = $(this).data('settings');
+
+			if (settings.element_count > 1) {
 
 				// stop the interval if there is one
-				if (members.interval !== false) {
-					members.interval.cancel();
+				if (settings.interval !== false) {
+					settings.interval.cancel();
 				}
 
 				// only call callbacks if we need to
-				if (members.transition_state == 'resumed') {
+				if (settings.transition_state == 'resumed') {
 
 					// set transition state
-					members.transition_state = 'paused';
+					settings.transition_state = 'paused';
 
 					// call rotate state change callback
-					if (members.settings.rotate_changed != null) {
-						members.settings.rotate_changed.call(undefined, {
+					if (settings.rotate_changed != null) {
+						settings.rotate_changed.call(undefined, {
 							'rotate' : 'paused',
-							'count'  : members.master_count
+							'count'  : settings.master_count
 						});
 					}
 				}
@@ -859,13 +957,14 @@
 		resume : function() {
 
 			// start interval again if applicable
-			private_methods.rotate_elements();
+			private_methods.rotate_elements($(this));
 
 		},
 
 		continue_load : function() {
-			if (members.settings.custom_onloads.count > 0) {
-				members.onloads_triggered++;
+			var settings = $(this).data('settings');
+			if (settings.custom_onloads.count > 0) {
+				settings.onloads_triggered++;
 			}
 		}
 

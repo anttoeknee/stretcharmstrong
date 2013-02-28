@@ -11,45 +11,79 @@ $(document).ready(function() {
 	 */
   	var slides = $('div.backgrounds');
   	slides.stretcharmstrong({
-    	'rotate'     : false,
-    	'interval'   : 5000,
+    	'rotate'     : true,
+    	'rotate_interval'   : 5000,
     	'transition' : {
-    		'type'        : 'slide',
+    		'type'        : 'fade',
     		'duration'    : 1500,
     		'orientation' : 'horizontal'
     	},
-    	'element'    : 'div',
-    	'resize'     : false,
-    	'background' : false,
+    	'element'    : 'img',
+    	'resize'     : true,
+    	'background' : true,
+    	'loading_element' : '.loading-overlay',
     	transition_complete : function(event) { // some properties for the transition...
-    		console.log(this); // the image that has been transitioned in...
-    		console.log(event); 
-    		console.log('transition complete');
+    		 console.log(this); // the image that has been transitioned in...
+    		 console.log(event); 
+    		 console.log('transition complete');
     	},
     	cycle_complete : function() {  
     		console.log('cycle complete');
     	},
     	rotate_changed : function(event) { // info on the state of rotation
-    		console.log(event);
-    		if (event.rotate == 'resumed') {
-    			$('.timer-ctl').text('pause');
-				$('.timer-ctl').removeClass('resume');
-				$('.timer-ctl').addClass('pause');
-    		}
+     		console.log(event);
+     		if (event.rotate == 'resumed') {
+     			$('.timer-ctl').text('pause');
+				 $('.timer-ctl').removeClass('resume');
+				 $('.timer-ctl').addClass('pause');
+     		}
 
-    		if (event.rotate == 'paused') {
-    			$('.timer-ctl').text('resume');
-				$('.timer-ctl').removeClass('pause');
-				$('.timer-ctl').addClass('resume');
+     		if (event.rotate == 'paused') {
+     			$('.timer-ctl').text('resume');
+				 $('.timer-ctl').removeClass('pause');
+				 $('.timer-ctl').addClass('resume');
     		}
-    	}       
+    	},
+    	on_resize : function(event) {
+    		console.log($(this));
+    		console.log(event.dimensions.width + ', ' + event.dimensions.height);
+    	}      
+  	});
+
+	var inline = $('div.inline-content');
+	inline.stretcharmstrong({
+    	'rotate'     : true,
+    	'rotate_interval'   : 3000,
+    	'transition' : {
+    		'type'        : 'slide',
+    		'duration'    : 1500,
+    		'orientation' : 'vertical'
+    	},
+    	'element'    : 'img',
+    	'resize'     : true,
+    	'background' : false,
+    	transition_complete : function(event) { // some properties for the transition...
+    		 console.log(this); // the image that has been transitioned in...
+    		 console.log(event); 
+    		 console.log('transition complete');
+    	},
+    	cycle_complete : function() {  
+    		 console.log('cycle complete');
+    	},
+    	rotate_changed : function(event) { // info on the state of rotation
+    		 console.log(event);
+    	},
+    	on_resize : function(event) {
+    		console.log($(this));
+    		console.log(event.dimensions.width + ', ' + event.dimensions.height);
+    	}             
   	});
 
 	/* 
 		see home.php for markup, these controls will show the next and
 		previous images/contents
 	*/
-	$('.next').bind('click', function(e) {
+	$('#next').bind('click', function(e) {
 
 		e.preventDefault();
 
@@ -58,7 +92,7 @@ $(document).ready(function() {
 
 	});
 
-	$('.prev').bind('click', function(e) {
+	$('#prev').bind('click', function(e) {
 
 		e.preventDefault();
 
@@ -92,6 +126,27 @@ $(document).ready(function() {
 	$('div.slide-chooser a').bind('click', function(e) {
 		e.preventDefault();
 		slides.stretcharmstrong('jumpto', parseInt($(this).attr('id')));
+	});
+
+
+	/* middle controls */
+
+	$('section.middle a.next').bind('click', function(e) {
+
+		e.preventDefault();
+
+		// call 'next' function
+		inline.stretcharmstrong('next');
+
+	});
+
+	$('section.middle a.prev').bind('click', function(e) {
+
+		e.preventDefault();
+
+		// call 'prev' function
+		inline.stretcharmstrong('prev');
+		
 	});
 
 
