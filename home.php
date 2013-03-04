@@ -27,3 +27,5 @@
 <div class="slide-chooser">
 	<p>JUMP TO SLIDE: </p>
 </div>
+
+<a href="#" title="destroy" id="destroy" class="instance-ctl destroy">DESTROY</a>

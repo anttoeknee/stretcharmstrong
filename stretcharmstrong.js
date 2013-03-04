@@ -1,7 +1,7 @@
 /*
 	stretcharmstrong: developed by Anthony Armstrong
-		version: 1.2.2
-		last modified: 2013-02-28
+		version: 1.2.4
+		last modified: 2013-03-04
 */
 
 (function($) {
@@ -70,7 +70,7 @@
 		      	transition_complete : function(event) {},
 		      	cycle_complete : function(event) {},
 		      	rotate_changed : function(event) {},
-		      	on_resize : function(event) {},
+		      	on_resize : function(event) {}
 		    }, options, members); // combine members into settings so we can use them for each instance
 
 		    // store settings in data object so we can have mulitple instances...
@@ -209,49 +209,57 @@
 
 			} else {
 
-				// wait for images etc...
-				$(window).bind('load.stretcharmstrong', function() {
+				// waiting for 'complete' ready state
+				var ready_interval = setInterval(function(){
 
-					// can we find an iframe?
-					if (element_handle.find('iframe').size() > 0) {
+					// if the ready state is complete
+					if (document.readyState == 'complete') {
 
-						// how many?
-						var iframe_count = element_handle.find('iframe').size();
-						var iframe_load_count = 0;
+						// can we find an iframe?
+						if (element_handle.find('iframe').size() > 0) {
 
-						$('iframe').bind('load.stretcharmstrong', function() {
+							// how many?
+							var iframe_count = element_handle.find('iframe').size();
+							var iframe_load_count = 0;
 
-							iframe_load_count++;
+							$('iframe').bind('load.stretcharmstrong', function() {
 
-							if (iframe_load_count == iframe_count) {
+								iframe_load_count++;
 
-								// has a loading element been supplied?
-								if (loading_overlay.size() > 0) {
+								if (iframe_load_count == iframe_count) {
 
-									// hide it...
-									loading_overlay.fadeOut(300);
+									// has a loading element been supplied?
+									if (loading_overlay.size() > 0) {
+
+										// hide it...
+										loading_overlay.fadeOut(300);
+									}
+
+									self.prepare_continue(element_handle);
+
 								}
 
-								self.prepare_continue(element_handle);
+							});
 
+						} else {
+
+							// has a loading element been supplied?
+							if (loading_overlay.size() > 0) {
+
+								// hide it...
+								loading_overlay.fadeOut(300);
 							}
 
-						});
+							self.prepare_continue(element_handle);
 
-					} else {
-
-						// has a loading element been supplied?
-						if (loading_overlay.size() > 0) {
-
-							// hide it...
-							loading_overlay.fadeOut(300);
 						}
 
-						self.prepare_continue(element_handle);
+						// clear interval
+						clearInterval(ready_interval);
 
 					}
 
-				});
+				},500);
 
 			}
 
@@ -960,6 +968,33 @@
 			if (settings.custom_onloads.count > 0) {
 				settings.onloads_triggered++;
 			}
+		},
+
+		destroy : function(loading_overlay) {
+			var settings = $(this).data('settings');
+
+			// unbind events
+			$(window).unbind('load.stretcharmstrong');
+			$(window).unbind('resize.stretcharmstrong');
+			$('iframe').unbind('load.stretcharmstrong');
+
+			// show loading_overlay?
+			if (loading_overlay && $(settings.loading_element).size() > 0) {
+				$(settings.loading_element).fadeIn(300);
+			}
+
+			// remove styles
+			$(this).removeAttr('style');
+
+			// remove data
+			$.removeData($(this), 'settings');
+
+			// remove children
+			$(this).find(settings.element).remove();
+
+			// set null
+			$(this).stretcharmstrong = null;
+
 		}
 
 
