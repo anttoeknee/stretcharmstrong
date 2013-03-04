@@ -1,4 +1,4 @@
-stretcharmstrong (v1.2.0)
+stretcharmstrong (v1.2.4)
 =========================
 
 jQuery Plugin for HTML Background Resizing and Slide Show
@@ -133,6 +133,7 @@ The methods available are;-
   - **pause**  : pause the rotation
   - **resume** : resume the rotation
   - **continue** : use if 'custom_onloads' setting is greater than 0 to indicate when the onload you are waiting for has loaded (e.g. inside the 'youTubeApiReady' handler). You must call this function for each onload you are waiting for. (v1.1.6) 
+  - **destroy** : resets the DOM to the it's original state before plugin initialisation and disposes of stretcharmstrong, pass true as argument if you wish to fade in the loading overlay (v1.2.4)
 
 Please see home.php for the markup and script.js in this repo for a basic example of implementation.
 
