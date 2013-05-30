@@ -1,7 +1,7 @@
 /*
 	stretcharmstrong: developed by Anthony Armstrong
-		version: 1.2.4
-		last modified: 2013-03-04
+		version: 1.3.0
+		last modified: 2013-05-30
 */
 
 (function($) {
@@ -35,7 +35,7 @@
 
 			// private defaults
 			var members = {
-				'image_attr'       : {},
+				'element_attr'       : {},
 				'wrapper'         : null,
 				'current_element'  : 0,
 				'element_count'    : 0,
@@ -44,7 +44,8 @@
 				'images_array'     : null,
 				'initialized'      : false,
 				'transition_state' : 'paused',
-				'onloads_triggered' : 0
+				'onloads_triggered' : 0,
+				'weighted_element'  : null,
 			};
 			
 			// create some defaults, extending them with any options that were provided
@@ -56,6 +57,7 @@
 		    		'duration'    : 1000,
 		    		'orientation' : 'horizontal'
 		    	},
+		    	'weighted'     : false,
 		      	'element'      : 'img',
 		      	'background'   : true,
 		      	'ajax'         : null,
@@ -158,6 +160,21 @@
 				}
 
 			});
+
+			if (settings.weighted) {
+
+				// create weighted element
+				settings.weighted_element = $('<div />');
+				settings.weighted_element.attr('data-slide', 'weighted');
+				settings.weighted_element.css({
+					'position' : 'relative',
+					'display'  : 'block',
+					'margin'   : '0 auto'
+				});
+				settings.weighted_element.insertAfter(element_handle);
+			}
+
+			
 
 			var loading_overlay = $(settings.loading_element);
 
@@ -305,9 +322,9 @@
 			element_handle.children(settings.element).each(function(i) {
 
 				// store original width and height
-				settings.image_attr[i] = {
-					'width'  : $(this).width(),
-					'height' : $(this).height()
+				settings.element_attr[i] = {
+					'width'  : $(this).outerWidth(true),
+					'height' : $(this).outerHeight(true)
 				};
 
 				// update element count
@@ -353,7 +370,7 @@
 				var new_height = 0;
 				var new_width  = 0;
 
-				var calc_width = parseInt(settings.image_attr[i].width / settings.image_attr[i].height * element_handle.height());
+				var calc_width = parseInt(settings.element_attr[i].width / settings.element_attr[i].height * element_handle.height());
 				var scaled_width = calc_width > new_width ? calc_width : new_width;
 
 				var mod = element_handle.width() % scaled_width;
@@ -361,7 +378,7 @@
 				// because the formula only has the parent as a max, we need to add on the difference between the parent and the scaled width (if there is one)
 				new_width = (mod != element_handle.width()) ? (scaled_width % element_handle.width()) + (element_handle.width() - scaled_width) : scaled_width;
 
-				var calc_height  = parseInt(settings.image_attr[i].height / settings.image_attr[i].width * new_width);
+				var calc_height  = parseInt(settings.element_attr[i].height / settings.element_attr[i].width * new_width);
 				var scaled_height = calc_height > new_height ? calc_height : new_height;
 
 				new_height = scaled_height;
@@ -386,14 +403,21 @@
 							'dimensions' : {
 								'width' : new_width,
 								'height': new_height
-							}
+							},
+							'element_end' : new_height + element_handle.offset().top
 						});
 					}
 				}
 
-			});
+				if (settings.weighted) {
+					settings.weighted_element.css({
+						'width' : new_width,
+						'height' : new_height
+					});
+				}		
 
-			
+			});
+	
 		},
 
 		rotate_elements : function(element_handle) {

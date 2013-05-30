@@ -21,6 +21,7 @@ $(document).ready(function() {
         'element'    : 'img',
         'resize'     : true,
         'background' : true,
+        'weighted'   : false,
         'loading_element' : '.loading-overlay',
         transition_complete : function(event) { // some properties for the transition...
              console.log(this); // the image that has been transitioned in...
@@ -59,6 +60,7 @@ $(document).ready(function() {
             'duration'    : 1500,
             'orientation' : 'vertical'
         },
+        'weighted'   : false,
         'element'    : 'img',
         'resize'     : true,
         'background' : false,
