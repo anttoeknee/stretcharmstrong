@@ -1,4 +1,4 @@
-stretcharmstrong (v1.2.4)
+stretcharmstrong (v1.3.0)
 =========================
 
 jQuery Plugin for HTML Background Resizing and Slide Show
@@ -39,7 +39,8 @@ Usage (Pre-rendered HTML)
       'type'        : 'slide',
       'duration'    : 1500,
       'orientation' : 'vertical'
-    },                                                         
+    },
+    'weighted'    : false,
     'element'     : 'img',                             
     'background'  : true,
     'ignore_first' : false,
@@ -84,6 +85,7 @@ Options
   - - - **type**        : *string* | the transition type for the rotate (currently 'fade' or 'slide') (v1.1.4)
   - - - **duration**    : *int*    | the transition duration in miliseconds (v1.1.4)
   - - - **orientation** : *string* | the transition orientation, 'horizontal' or 'vertical' (v1.1.4)
+  - **weighted**     : *bool*   | add a weighted relative div to help maintain document flow
   - **element**      : *string* | the name of the HTML element type to be worked with  
   - **background**   : *bool*   | use as background or inline 
   - **ignore_first** : *bool*   | ignore 'transition_complete' callback after first element? (v1.1.3)
@@ -113,7 +115,8 @@ Callbacks
   - *count*  : the total count of all transitions (v1.1.6)
 
 **on_resize** : fires when elements are resized passing data in as follows;-
-  - *dimensions* : contains the width and height of the resized elements
+  - *dimensions*  : contains the width and height of the resized elements
+  - *element_end* : the 'y' position of the bottom of the resized element(s)
 
   - the *this* keyword is a reference to the currently displayed element 
 
