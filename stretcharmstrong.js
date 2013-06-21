@@ -45,7 +45,7 @@
 				'initialized'      : false,
 				'transition_state' : 'paused',
 				'onloads_triggered' : 0,
-				'weighted_element'  : null,
+				'weighted_element'  : null
 			};
 			
 			// create some defaults, extending them with any options that were provided
