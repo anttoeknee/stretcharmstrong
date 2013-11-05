@@ -1,7 +1,7 @@
 /*
 	stretcharmstrong: developed by Anthony Armstrong
-		version: 1.3.0
-		last modified: 2013-05-30
+		version: 1.3.1
+		last modified: 2013-11-05
 */
 
 (function($) {
@@ -239,7 +239,9 @@
 							var iframe_count = element_handle.find('iframe').size();
 							var iframe_load_count = 0;
 
-							$('iframe').bind('load.stretcharmstrong', function() {
+							// capture ready event of of iframe document object...
+							$(element_handle.find('iframe')[0].document).ready(function() {
+							
 
 								iframe_load_count++;
 
@@ -343,7 +345,7 @@
 				self.resize_elements(element_handle);
 
 				// bind resize event to window
-		    	$(window).bind('resize.stretcharmstrong', function() {
+		    	$(window).on('resize.stretcharmstrong', function() {
 		    		self.resize_elements(element_handle);
 		    	});
 
@@ -998,9 +1000,9 @@
 			var settings = $(this).data('settings');
 
 			// unbind events
-			$(window).unbind('load.stretcharmstrong');
-			$(window).unbind('resize.stretcharmstrong');
-			$('iframe').unbind('load.stretcharmstrong');
+			$(window).off('load.stretcharmstrong');
+			$(window).off('resize.stretcharmstrong');
+			$('iframe').off('load.stretcharmstrong');
 
 			// show loading_overlay?
 			if (loading_overlay && $(settings.loading_element).size() > 0) {
