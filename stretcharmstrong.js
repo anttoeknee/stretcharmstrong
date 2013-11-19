@@ -1,7 +1,7 @@
 /*
 	stretcharmstrong: developed by Anthony Armstrong
-		version: 1.3.1
-		last modified: 2013-11-05
+		version: 1.3.3
+		last modified: 2013-11-19
 */
 
 (function($) {
@@ -137,7 +137,7 @@
 			this.set_wrapper_styles(element_handle);
 
 			// give some basic styling to elements
-			var elements = element_handle.children(settings.element);
+			var elements = element_handle.children(settings.element).not('[data-slide="weighted"]');
 			var reversed_elements = elements.toArray().reverse();
 			$(reversed_elements).each(function(i) {
 				var z_index = settings.transition.type == 'fade' ? i : 1;
@@ -161,20 +161,12 @@
 
 			});
 
-			if (settings.weighted) {
-
-				// create weighted element
-				settings.weighted_element = $('<div />');
-				settings.weighted_element.attr('data-slide', 'weighted');
-				settings.weighted_element.css({
-					'position' : 'relative',
-					'display'  : 'block',
-					'margin'   : '0 auto'
-				});
-				settings.weighted_element.insertAfter(element_handle);
+			// create wrapping element
+			if (settings.background !== true) {
+				settings.wrapper = $('<div />');
+				settings.wrapper.attr('data-info', 'stretcharmstrong-wrapper');
+				element_handle.wrap(settings.wrapper);
 			}
-
-			
 
 			var loading_overlay = $(settings.loading_element);
 
@@ -355,12 +347,49 @@
 			self.rotate_elements(element_handle);
 
 		},
+
+		get_max_width : function(arr_dimensions) {
+
+			var max_width;
+			for (var i = 0; i < arr_dimensions.length; i++) {
+
+				if (i==0) {
+					max_width = arr_dimensions[0]._width;
+				}
+
+				var index = (i == arr_dimensions.length - 1) ? 0 : i + 1;
+
+				// compare width
+				max_width = Math.max(max_width, arr_dimensions[index]._width);
+				
+			}
+
+			return max_width;
+
+		},
+
+		get_max_dimensions : function(arr_dimensions) {
+
+			var max_width = this.get_max_width(arr_dimensions);
+			for (var i = 0; i < arr_dimensions.length; i++) {
+				if (max_width == arr_dimensions[i]._width) {
+					return arr_dimensions[i];
+				}
+			}
+
+		},
 			
 		resize_elements : function(element_handle) {	
 
 			var settings = element_handle.data('settings');
 
 			this.set_wrapper_styles(element_handle);
+
+			// object literal to hold final dimensions
+			var dimensions = {};
+
+			// array to hold calculated dimensions
+			var calculated_dimensions = [];
 
 			// for each element
 			element_handle.children(settings.element).each(function(i) {
@@ -372,53 +401,62 @@
 				var new_height = 0;
 				var new_width  = 0;
 
-				var calc_width = parseInt(settings.element_attr[i].width / settings.element_attr[i].height * element_handle.height());
+				var calc_width = parseInt(settings.element_attr[i].width / settings.element_attr[i].height * element_handle.outerHeight(true));
 				var scaled_width = calc_width > new_width ? calc_width : new_width;
 
-				var mod = element_handle.width() % scaled_width;
+				var mod = element_handle.outerWidth(true) % scaled_width;
 
 				// because the formula only has the parent as a max, we need to add on the difference between the parent and the scaled width (if there is one)
-				new_width = (mod != element_handle.width()) ? (scaled_width % element_handle.width()) + (element_handle.width() - scaled_width) : scaled_width;
+				new_width = (mod != element_handle.outerWidth(true)) ? (scaled_width % element_handle.outerWidth(true)) + (element_handle.outerWidth() - scaled_width) : scaled_width;
 
 				var calc_height  = parseInt(settings.element_attr[i].height / settings.element_attr[i].width * new_width);
 				var scaled_height = calc_height > new_height ? calc_height : new_height;
 
 				new_height = scaled_height;
 
-				$(this).css({
-					'width' : new_width + 'px',
-					'height': new_height + 'px'
-				});
-
-				if (settings.element == 'img' || 'video') {
-					$(this).attr({
-						'width' : new_width,
-						'height': new_height
-					});
-				}
-
-				if (i == element_handle.children(settings.element).size() - 1) {
-
-					// call on resize callback
-					if (settings.on_resize != null) {
-						settings.on_resize.call(element_handle.find('[data-slide="current"]'), {
-							'dimensions' : {
-								'width' : new_width,
-								'height': new_height
-							},
-							'element_end' : new_height + element_handle.offset().top
-						});
-					}
-				}
-
-				if (settings.weighted) {
-					settings.weighted_element.css({
-						'width' : new_width,
-						'height' : new_height
-					});
-				}		
+				// add to array
+				calculated_dimensions[i] = {_width : new_width, _height : calc_height};
 
 			});
+
+			dimensions = this.get_max_dimensions(calculated_dimensions);
+
+			// scale all children equally
+			element_handle.children(settings.element).css({
+				'width' : dimensions._width + 'px',
+				'height': dimensions._height + 'px'
+			});
+
+			if (settings.element == 'img' || 'video') {
+				element_handle.children(settings.element).attr({
+					'width' : dimensions._width,
+					'height': dimensions._height
+				});
+			}
+
+			// call on resize callback
+			if (settings.on_resize != null) {
+				settings.on_resize.call(element_handle.find('[data-slide="current"]'), {
+					'dimensions' : {
+						'width' : dimensions._width,
+						'height': dimensions._height
+					},
+					'element_end' : dimensions._height + element_handle.offset().top
+				});
+			}
+
+			element_handle.parent('[data-info="stretcharmstrong-wrapper"]').css({
+				'position' : 'relative',
+				'overflow' : 'hidden',
+				'width' : '100%',
+				'height' : '100%'
+			});
+
+			if (settings.weighted) {
+				element_handle.parent('[data-info="stretcharmstrong-wrapper"]').css({
+					'padding-bottom' : dimensions._height
+				});
+			}		
 	
 		},
 
@@ -541,8 +579,8 @@
 			var image_width = images.width();
 			var image_height = images.height();
 
-			var current_image = element_handle.find('[data-slide="current"]');
-			var next_image = element_handle.find('[data-index="' + new_index + '"]');
+			var current_image = element_handle.find('[data-slide="current"]').not('[data-slide="weighted"]');
+			var next_image = element_handle.find('[data-index="' + new_index + '"]').not('[data-slide="weighted"]');
 
 			if (!current_image.is(':animated') && !next_image.is(':animated')) {
 
@@ -616,8 +654,8 @@
 			var image_height = images.height();
 
 			
-			var current_image = element_handle.find('[data-slide="current"]');
-			var prev_image = element_handle.find('[data-index="' + new_index + '"]');
+			var current_image = element_handle.find('[data-slide="current"]').not('[data-slide="weighted"]');
+			var prev_image = element_handle.find('[data-index="' + new_index + '"]').not('[data-slide="weighted"]');
 
 			if (!current_image.is(':animated') && !prev_image.is(':animated')) {
 
@@ -683,7 +721,7 @@
 			var settings = element_handle.data('settings');
 
 			// get handle on images
-			var images = element_handle.children(settings.element);
+			var images = element_handle.children(settings.element).not('[data-slide="weighted"]');
 
 			if (!$(images).is(':animated')) {
 
@@ -829,7 +867,7 @@
 
 			var settings = $(this).data('settings');
 
-			var element_count = $(this).children().size();
+			var element_count = $(this).children().not('[data-slide="weighted"]').size();
 			var current_element = $(this).find(settings.element + '[data-slide="current"]');
 			var current_index = parseInt(current_element.attr('data-index'));
 
@@ -877,7 +915,7 @@
 
 			var settings = $(this).data('settings');
 
-			var element_count = $(this).children().size();
+			var element_count = $(this).children().not('[data-slide="weighted"]').size();
 			var current_element = $(this).find(settings.element + '[data-slide="current"]');
 			var current_index = parseInt(current_element.attr('data-index'));
 
@@ -1018,8 +1056,18 @@
 			// remove children
 			$(this).find(settings.element).remove();
 
+			// remove wrapper
+			if (settings.wrapper) {
+				settings.wrapper.remove();
+			}
+
+			// clear timer
+			settings.interval.cancel();
+
 			// set null
 			$(this).stretcharmstrong = null;
+
+
 
 		}
 
